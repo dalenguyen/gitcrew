@@ -189,6 +189,32 @@ Quick one-line summary of task counts, branches, hooks, and working tree state.
 gitcrew status
 ```
 
+### `gitcrew pr` (issue + PR + code review workflow)
+
+Create a GitHub issue (if none exists), open a PR, and run a **code review agent** that follows best practices before merging. Requires [GitHub CLI](https://cli.github.com/) (`gh`) and authentication.
+
+```bash
+gitcrew pr create                    # Create issue (if needed) + PR for current branch
+gitcrew pr create --no-issue         # Create PR only, no issue
+gitcrew pr review                    # Run AI code review on this branch's PR
+gitcrew pr review --post             # Run review and post as PR comment
+gitcrew pr review --cli claude       # Use Claude for review (default: cursor or last used)
+```
+
+The review agent uses the role in `.agent/roles/review.md` (correctness, security, design, testing, docs, style). Run `gitcrew pr review` after pushing your branch and opening a PR; fix any "Must fix" items before merging.
+
+### `gitcrew docker`
+
+Build and run agents or tests in Docker.
+
+```bash
+gitcrew docker build    # Build agent image
+gitcrew docker test     # Run full test suite inside container
+gitcrew docker ps       # List running agent containers
+gitcrew docker stop Agent-A   # Stop one container
+gitcrew docker clean    # Remove containers and image
+```
+
 ---
 
 ## How It Works
@@ -212,8 +238,9 @@ There is **no orchestrator agent**. Agents coordinate through:
 5. Create feature branch
 6. Work: edit code → run tests → commit (loop)
 7. Merge main → resolve conflicts → run full tests
-8. Merge to main, mark task done, log what happened
-9. Go to step 1
+8. Push branch → gitcrew pr create (issue + PR) → gitcrew pr review (fix "Must fix" items)
+9. Merge to main, mark task done, log what happened
+10. Go to step 1
 ```
 
 ### Three Deployment Approaches

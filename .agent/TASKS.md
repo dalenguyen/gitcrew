@@ -8,6 +8,7 @@
 
 ## ✅ Done
 <!-- Agents move completed tasks here with a short summary -->
+- [x] Feature: workflow to create issue + PR + code review before merge (review agent follows best practices) — Added gitcrew pr create (issue+PR) and pr review (code review agent with best-practices role); gh in Docker image; 6 tests; PROMPT/README updated (2026-02-07)
 - [x] Feature: add bash/zsh shell completion for gitcrew — Added CONTRIBUTING.md with full dev guide — Agent-B (2026-02-07)
 - [x] Chore: add CONTRIBUTING.md with development guide — Added bash/zsh completions, --completions flag, 4 tests — Agent-A (2026-02-07)
 - [x] Chore: add CI test badge to README — Added Tests + Docs CI badges to README header (2026-02-07)

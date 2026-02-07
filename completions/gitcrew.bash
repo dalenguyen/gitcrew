@@ -11,7 +11,7 @@ _gitcrew() {
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
 
-    commands="init spawn monitor task doctor hooks log status docker"
+    commands="init spawn monitor task doctor hooks log status docker pr"
 
     case "$prev" in
         gitcrew)
@@ -56,6 +56,10 @@ _gitcrew() {
             ;;
         docker)
             COMPREPLY=($(compgen -W "build test ps stop logs clean --help" -- "$cur"))
+            return 0
+            ;;
+        pr)
+            COMPREPLY=($(compgen -W "create review --help" -- "$cur"))
             return 0
             ;;
     esac

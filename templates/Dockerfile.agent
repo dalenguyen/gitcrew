@@ -18,7 +18,7 @@ LABEL maintainer="gitcrew" \
 # Avoid interactive prompts during build
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install essentials: git, curl, bash, common build tools
+# Install essentials: git, curl, bash, gh (for pr create/review), common build tools
 RUN apt-get update -qq && \
     apt-get install -y --no-install-recommends \
         git \
@@ -27,6 +27,7 @@ RUN apt-get update -qq && \
         bash \
         jq \
         make \
+        gh \
     && rm -rf /var/lib/apt/lists/*
 
 # Configure git defaults for agents

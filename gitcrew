@@ -67,6 +67,7 @@ print_usage() {
     echo -e "    ${GREEN}log${NC}         Append to or view the agent log"
     echo -e "    ${GREEN}status${NC}      Quick summary of agent team state"
     echo -e "    ${GREEN}docker${NC}      Manage Docker-based agent containers"
+    echo -e "    ${GREEN}pr${NC}          Create issue + PR and run code review before merge"
     echo ""
     echo -e "${BOLD}OPTIONS${NC}"
     echo "    -h, --help       Show this help message"
@@ -141,7 +142,7 @@ case "$1" in
         fi
         exit 0
         ;;
-    init|spawn|monitor|task|doctor|hooks|log|status|docker)
+    init|spawn|monitor|task|doctor|hooks|log|status|docker|pr)
         run_command "$@"
         ;;
     *)
