@@ -19,3 +19,12 @@ New agent sessions should read this first to inherit context.
 - Installed pre-push hook via `gitcrew hooks` — pushes now blocked if tests fail
 - Added .github/workflows/test.yml for CI on every push
 - Fixed sandbox isolation bug: setup_sandbox cd was lost in $() subshell
+
+### 2026-02-07 01:49 — Agent-A
+- Added 'gitcrew log' command with append/show. 4 new tests.
+
+### 2026-02-07 01:49 — Agent-B
+- Added 'gitcrew status' command. Shows tasks, branches, hooks, working tree. 3 new tests.
+
+### 2026-02-07 01:49 — Agent-C
+- Added CI badges (Tests + Docs) to README.md header

@@ -1,5 +1,8 @@
 # gitcrew
 
+[![Tests](https://github.com/dalenguyen/gitcrew/actions/workflows/test.yml/badge.svg)](https://github.com/dalenguyen/gitcrew/actions/workflows/test.yml)
+[![Docs](https://github.com/dalenguyen/gitcrew/actions/workflows/deploy-docs.yml/badge.svg)](https://dalenguyen.github.io/gitcrew/)
+
 Parallel & Continuous AI Agent Teams for Any Codebase.
 
 A zero-dependency CLI toolkit for running multiple AI agents in parallel on a shared git repo. Inspired by [Anthropic's parallel Claude agent teams](https://www.anthropic.com/engineering/building-c-compiler) pattern, generalized for any language, framework, or existing project.
@@ -162,6 +165,24 @@ Installs git hooks that prevent pushing broken code.
 ```bash
 gitcrew hooks           # Install pre-push hook
 gitcrew hooks --remove  # Remove hooks
+```
+
+### `gitcrew log`
+
+Append to or view the shared agent log.
+
+```bash
+gitcrew log Agent-A "Refactored auth module, all tests pass"
+gitcrew log show          # Show last 20 lines
+gitcrew log show -n 50    # Show last 50 lines
+```
+
+### `gitcrew status`
+
+Quick one-line summary of task counts, branches, hooks, and working tree state.
+
+```bash
+gitcrew status
 ```
 
 ---

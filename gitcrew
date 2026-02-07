@@ -64,6 +64,8 @@ print_usage() {
     echo -e "    ${GREEN}task${NC}        Manage the agent task board"
     echo -e "    ${GREEN}doctor${NC}      Diagnose project readiness for agents"
     echo -e "    ${GREEN}hooks${NC}       Install git hooks for agent safety"
+    echo -e "    ${GREEN}log${NC}         Append to or view the agent log"
+    echo -e "    ${GREEN}status${NC}      Quick summary of agent team state"
     echo ""
     echo -e "${BOLD}OPTIONS${NC}"
     echo "    -h, --help       Show this help message"
@@ -127,7 +129,7 @@ case "$1" in
         echo "gitcrew v${VERSION}"
         exit 0
         ;;
-    init|spawn|monitor|task|doctor|hooks)
+    init|spawn|monitor|task|doctor|hooks|log|status)
         run_command "$@"
         ;;
     *)
