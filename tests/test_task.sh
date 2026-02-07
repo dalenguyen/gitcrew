@@ -5,7 +5,7 @@ _setup_with_init() {
     local sandbox
     sandbox=$(setup_sandbox)
     cd "$sandbox"
-    "$GITCREW" init --no-docker --no-hooks 2>&1 >/dev/null
+    "$GITCREW" init --no-docker --no-hooks >/dev/null 2>&1
     echo "$sandbox"
 }
 
@@ -40,8 +40,8 @@ test_task_add_shows_in_list() {
     sandbox=$(_setup_with_init)
     cd "$sandbox"
 
-    "$GITCREW" task add "Fix: login bug" 2>&1 >/dev/null
-    "$GITCREW" task add "Feature: export CSV" 2>&1 >/dev/null
+    "$GITCREW" task add "Fix: login bug" >/dev/null 2>&1
+    "$GITCREW" task add "Feature: export CSV" >/dev/null 2>&1
 
     local output
     output=$("$GITCREW" task list 2>&1)
@@ -56,7 +56,7 @@ test_task_lock() {
     sandbox=$(_setup_with_init)
     cd "$sandbox"
 
-    "$GITCREW" task add "Fix: login bug" 2>&1 >/dev/null
+    "$GITCREW" task add "Fix: login bug" >/dev/null 2>&1
 
     local output
     output=$("$GITCREW" task lock 1 Agent-Test 2>&1)
@@ -77,9 +77,9 @@ test_task_lock_removes_from_backlog() {
     sandbox=$(_setup_with_init)
     cd "$sandbox"
 
-    "$GITCREW" task add "Fix: login bug" 2>&1 >/dev/null
-    "$GITCREW" task add "Feature: export CSV" 2>&1 >/dev/null
-    "$GITCREW" task lock 1 Agent-Test 2>&1 >/dev/null
+    "$GITCREW" task add "Fix: login bug" >/dev/null 2>&1
+    "$GITCREW" task add "Feature: export CSV" >/dev/null 2>&1
+    "$GITCREW" task lock 1 Agent-Test >/dev/null 2>&1
 
     # Backlog should still have 1 item
     local output
@@ -94,8 +94,8 @@ test_task_done() {
     sandbox=$(_setup_with_init)
     cd "$sandbox"
 
-    "$GITCREW" task add "Fix: login bug" 2>&1 >/dev/null
-    "$GITCREW" task lock 1 Agent-Test 2>&1 >/dev/null
+    "$GITCREW" task add "Fix: login bug" >/dev/null 2>&1
+    "$GITCREW" task lock 1 Agent-Test >/dev/null 2>&1
 
     local output
     output=$("$GITCREW" task done 1 "Fixed with token refresh" 2>&1)
@@ -113,8 +113,8 @@ test_task_unlock() {
     sandbox=$(_setup_with_init)
     cd "$sandbox"
 
-    "$GITCREW" task add "Fix: login bug" 2>&1 >/dev/null
-    "$GITCREW" task lock 1 Agent-Test 2>&1 >/dev/null
+    "$GITCREW" task add "Fix: login bug" >/dev/null 2>&1
+    "$GITCREW" task lock 1 Agent-Test >/dev/null 2>&1
 
     local output
     output=$("$GITCREW" task unlock 1 2>&1)
@@ -130,7 +130,7 @@ test_task_add_requires_description() {
     cd "$sandbox"
 
     local exit_code=0
-    "$GITCREW" task add 2>&1 >/dev/null || exit_code=$?
+    "$GITCREW" task add >/dev/null 2>&1 || exit_code=$?
     assert_eq "1" "$exit_code"
 
     teardown_sandbox "$sandbox"
@@ -142,7 +142,7 @@ test_task_lock_invalid_number_fails() {
     cd "$sandbox"
 
     local exit_code=0
-    "$GITCREW" task lock 99 Agent-Test 2>&1 >/dev/null || exit_code=$?
+    "$GITCREW" task lock 99 Agent-Test >/dev/null 2>&1 || exit_code=$?
     assert_eq "1" "$exit_code"
 
     teardown_sandbox "$sandbox"
@@ -154,7 +154,7 @@ test_task_fails_without_init() {
     cd "$sandbox"
 
     local exit_code=0
-    "$GITCREW" task list 2>&1 >/dev/null || exit_code=$?
+    "$GITCREW" task list >/dev/null 2>&1 || exit_code=$?
     assert_eq "1" "$exit_code"
 
     teardown_sandbox "$sandbox"
@@ -171,7 +171,7 @@ Feature: dark mode toggle
 Chore: update dependencies
 EOF
 
-    "$GITCREW" task import tasks.txt 2>&1 >/dev/null
+    "$GITCREW" task import tasks.txt >/dev/null 2>&1
 
     local output
     output=$("$GITCREW" task list 2>&1)
