@@ -46,9 +46,20 @@ require_gh() {
     fi
 }
 
+# gh 2.0+ required for --json/--jq (issue list, pr view, issue create)
+check_gh_version() {
+    if ! gh issue list --limit 1 --json number &>/dev/null 2>&1; then
+        echo -e "${GITCREW_RED}Error: GitHub CLI 2.0+ is required for 'gitcrew pr'.${GITCREW_NC}"
+        echo "Your version: $(gh --version 2>/dev/null | head -1)"
+        echo "Install or upgrade: https://github.com/cli/cli/releases"
+        exit 1
+    fi
+}
+
 # --- pr create ---
 cmd_create() {
     require_gh
+    check_gh_version
 
     local title="" body="" no_issue=false
     while [ $# -gt 0 ]; do
@@ -78,7 +89,10 @@ cmd_create() {
         issue_num=$(gh issue list --state open --limit 20 --json number,title --jq ".[] | select(.title | test(\"${title}\"; \"i\")) | .number" 2>/dev/null | head -1 || true)
         if [ -z "$issue_num" ]; then
             echo -e "${GITCREW_CYAN}Creating issue: ${title}${GITCREW_NC}"
-            issue_num=$(gh issue create --title "$title" --body "$body" --json number --jq '.number' 2>/dev/null)
+            issue_num=$(gh issue create --title "$title" --body "$body" --json number --jq '.number') || {
+                echo -e "${GITCREW_RED}Failed to create issue. Run 'gh auth login' if needed.${GITCREW_NC}"
+                exit 1
+            }
             echo -e "  ${GITCREW_GREEN}+${GITCREW_NC} Issue #${issue_num}"
         else
             echo -e "${GITCREW_CYAN}Using existing issue #${issue_num}${GITCREW_NC}"
@@ -95,7 +109,10 @@ ${body}"
     fi
 
     echo -e "${GITCREW_CYAN}Creating PR for ${branch}...${GITCREW_NC}"
-    gh pr create --title "$title" --body "$body" --head "$branch"
+    gh pr create --title "$title" --body "$body" --head "$branch" || {
+        echo -e "${GITCREW_RED}Failed to create PR. Check branch is pushed and 'gh auth login' is done.${GITCREW_NC}"
+        exit 1
+    }
     echo -e "${GITCREW_GREEN}PR created.${GITCREW_NC}"
 }
 

@@ -191,7 +191,7 @@ gitcrew status
 
 ### `gitcrew pr` (issue + PR + code review workflow)
 
-Create a GitHub issue (if none exists), open a PR, and run a **code review agent** that follows best practices before merging. Requires [GitHub CLI](https://cli.github.com/) (`gh`) and authentication.
+Create a GitHub issue (if none exists), open a PR, and run a **code review agent** that follows best practices before merging. Requires [GitHub CLI](https://cli.github.com/) **2.0+** (`gh`) and authentication (`gh auth login`). Upgrade with: `brew upgrade gh` or see [releases](https://github.com/cli/cli/releases).
 
 ```bash
 gitcrew pr create                    # Create issue (if needed) + PR for current branch
