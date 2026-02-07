@@ -74,13 +74,12 @@ render_dashboard() {
     echo "  In Progress: ${LOCKED}  |  Backlog: ${BACKLOG}  |  Done: ${DONE}"
     echo ""
 
-    # Active branches
+    # Active branches (newest first)
     echo "--- Active Agent Branches ---"
     local agent_branches
-    agent_branches=$(git branch -a 2>/dev/null | grep -i "agent" || true)
+    agent_branches=$(git for-each-ref --sort=-committerdate refs/heads refs/remotes/origin --format='%(refname:short)' 2>/dev/null | grep -i "agent" || true)
     if [ -n "$agent_branches" ]; then
         while IFS= read -r branch; do
-            branch=$(echo "$branch" | sed 's/^[* ]*//')
             local LAST
             LAST=$(git log -1 --format="%ar — %s" "$branch" 2>/dev/null || echo "unknown")
             echo "  ${branch} (${LAST})"
@@ -158,8 +157,7 @@ echo "  In Progress: ${LOCKED}  |  Backlog: ${BACKLOG}  |  Done: ${DONE}"
 echo ""
 
 echo "--- Active Agent Branches ---"
-git branch -a 2>/dev/null | grep -i "agent" | while IFS= read -r b; do
-    b=$(echo "$b" | sed 's/^[* ]*//')
+git for-each-ref --sort=-committerdate refs/heads refs/remotes/origin --format='%(refname:short)' 2>/dev/null | grep -i "agent" | while IFS= read -r b; do
     LAST=$(git log -1 --format="%ar — %s" "$b" 2>/dev/null || echo "unknown")
     echo "  ${b} (${LAST})"
 done
