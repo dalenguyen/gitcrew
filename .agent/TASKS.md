@@ -2,14 +2,14 @@
 
 ## 🔒 Locked (In Progress)
 <!-- Agents move tasks here and write their name + timestamp to claim them -->
-- [ ] Chore: add CONTRIBUTING.md with development guide — locked by **Agent-B** at 2026-02-07 01:51
-- [ ] Feature: add bash/zsh shell completion for gitcrew — locked by **Agent-A** at 2026-02-07 01:51
 
 ## 📋 Backlog (Available)
 <!-- Seed this with your actual work items using: gitcrew task add "description" -->
 
 ## ✅ Done
 <!-- Agents move completed tasks here with a short summary -->
+- [x] Feature: add bash/zsh shell completion for gitcrew — Added CONTRIBUTING.md with full dev guide — Agent-B (2026-02-07)
+- [x] Chore: add CONTRIBUTING.md with development guide — Added bash/zsh completions, --completions flag, 4 tests — Agent-A (2026-02-07)
 - [x] Chore: add CI test badge to README — Added Tests + Docs CI badges to README header (2026-02-07)
 - [x] Feature: add 'gitcrew status' command for quick project overview — Created status command showing tasks, branches, hooks, git state, 3 tests (2026-02-07)
 - [x] Feature: add 'gitcrew log' command to append entries to .agent/LOG.md — Created log command with append and show subcommands, 4 tests (2026-02-07)
