@@ -109,15 +109,17 @@ gitcrew init --no-hooks   # Skip git hooks
 
 ### `gitcrew spawn`
 
-Starts an agent loop. The agent reads the task board, claims a task, works on it, and loops.
+Starts an agent loop. **By default, spawn assigns the first backlog task to this agent** so it shows in progress immediately and the agent starts working on it. Use `--no-lock-next` if you want the agent to pick a task from the board when it runs.
 
 ```bash
 gitcrew spawn Agent-A feature              # Cursor (default; or last --cli used)
+gitcrew spawn Agent-B bugfix              # Assigns first task to Agent-B, then starts
+gitcrew spawn Agent-B bugfix --no-lock-next   # Agent picks from backlog when it runs
 gitcrew spawn Agent-B bugfix --cli cursor  # Use Cursor Agent
 gitcrew spawn Agent-C quality --cli aider  # Use Aider
 gitcrew spawn Agent-D docs --cli codex     # Use Codex CLI
 gitcrew spawn Agent-A feature --once       # Single session (no loop)
-gitcrew spawn Agent-A feature --dry-run    # Preview without executing
+gitcrew spawn Agent-A feature --dry-run   # Preview without executing
 gitcrew spawn Agent-A feature --docker     # Run in Docker container
 ```
 

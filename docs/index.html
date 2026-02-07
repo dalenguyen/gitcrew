@@ -664,7 +664,7 @@
             <div class="feature-card">
                 <div class="feature-icon">&#128640;</div>
                 <h3>gitcrew spawn</h3>
-                <p>Start an agent loop with any CLI tool. Supports <code>claude</code>, <code>cursor</code>, <code>aider</code>, and <code>codex</code>. Terminal or Docker.</p>
+                <p>Start an agent loop. Assigns the first backlog task to the agent by default (use <code>--no-lock-next</code> to skip). Supports <code>claude</code>, <code>cursor</code>, <code>aider</code>, <code>codex</code>. Terminal or Docker.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">&#128203;</div>
@@ -725,7 +725,7 @@ gitcrew task list</code></pre>
             </div>
             <div class="step">
                 <h4>Spawn agents</h4>
-                <p>Launch 2-3 agents with different roles.</p>
+                <p>Launch 2-3 agents. Each spawn assigns the first available backlog task to that agent, then starts the agent on it.</p>
                 <pre><code>gitcrew spawn Agent-A feature
 gitcrew spawn Agent-B bugfix
 gitcrew spawn Agent-C quality</code></pre>
