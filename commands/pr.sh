@@ -66,9 +66,6 @@ check_gh_version() {
 
 # --- pr create ---
 cmd_create() {
-    require_gh
-    check_gh_version
-
     local title="" body="" no_issue=false
     while [ $# -gt 0 ]; do
         case "$1" in
@@ -80,6 +77,8 @@ cmd_create() {
         esac
         shift
     done
+    require_gh
+    check_gh_version
 
     local branch
     branch=$(git branch --show-current 2>/dev/null || true)
@@ -280,6 +279,12 @@ review_has_blocking_issues() {
 
 # --- pr merge ---
 cmd_merge() {
+    local arg
+    for arg in "$@"; do
+        case "$arg" in
+            -h|--help) print_pr_usage; exit 0 ;;
+        esac
+    done
     require_gh
     check_gh_version
 
@@ -306,9 +311,6 @@ cmd_merge() {
 
 # --- pr flow: create (if needed) → review → merge if no Must fix ---
 cmd_flow() {
-    require_gh
-    check_gh_version
-
     local skip_review=false
     while [ $# -gt 0 ]; do
         case "$1" in
@@ -318,6 +320,8 @@ cmd_flow() {
         esac
         shift
     done
+    require_gh
+    check_gh_version
 
     local branch
     branch=$(git branch --show-current 2>/dev/null || true)
