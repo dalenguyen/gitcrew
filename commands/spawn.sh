@@ -17,8 +17,8 @@ print_spawn_usage() {
     echo "                    Options: feature, bugfix, quality, docs, integration"
     echo ""
     echo -e "${GITCREW_BOLD}OPTIONS${GITCREW_NC}"
-    echo "    --cli <tool>    Agent CLI to use: claude, aider, codex (default: claude)"
-    echo "    --model <m>     Model to use (default: claude-opus-4-6-20250219)"
+    echo "    --cli <tool>    Agent CLI to use: claude, cursor, aider, codex (default: claude)"
+    echo "    --model <m>     Model to use (passed to claude/aider if supported)"
     echo "    --docker        Run agent in a Docker container"
     echo "    --dry-run       Show what would run without executing"
     echo "    --once          Run a single session instead of looping"
@@ -26,8 +26,9 @@ print_spawn_usage() {
     echo ""
     echo -e "${GITCREW_BOLD}EXAMPLES${GITCREW_NC}"
     echo "    gitcrew spawn Agent-A feature"
-    echo "    gitcrew spawn Agent-B bugfix --cli aider"
-    echo "    gitcrew spawn Agent-C quality --docker"
+    echo "    gitcrew spawn Agent-B bugfix --cli cursor"
+    echo "    gitcrew spawn Agent-C quality --cli aider"
+    echo "    gitcrew spawn Agent-D docs --docker"
     echo "    gitcrew spawn Agent-A feature --once --dry-run"
     echo ""
 }
@@ -152,6 +153,14 @@ run_session() {
                       2>&1 | tee "$LOGFILE"
             fi
             ;;
+        cursor)
+            if [ "$DRY_RUN" = true ]; then
+                echo -e "${GITCREW_DIM}[dry-run] agent -p \"<prompt>\"${GITCREW_NC}"
+            else
+                agent -p "$PROMPT" \
+                      2>&1 | tee "$LOGFILE"
+            fi
+            ;;
         codex)
             if [ "$DRY_RUN" = true ]; then
                 echo -e "${GITCREW_DIM}[dry-run] codex --prompt \"<prompt>\"${GITCREW_NC}"
@@ -162,7 +171,7 @@ run_session() {
             ;;
         *)
             echo -e "${GITCREW_RED}Error: Unknown CLI tool '${CLI_TOOL}'${GITCREW_NC}"
-            echo "Supported: claude, aider, codex"
+            echo "Supported: claude, cursor, aider, codex"
             exit 1
             ;;
     esac

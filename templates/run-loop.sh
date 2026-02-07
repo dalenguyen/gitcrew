@@ -71,12 +71,16 @@ while true; do
                   --yes --auto-commits \
                   2>&1 | tee "$LOGFILE"
             ;;
+        cursor)
+            agent -p "$PROMPT" \
+                  2>&1 | tee "$LOGFILE"
+            ;;
         codex)
             codex --prompt "$PROMPT" \
                   2>&1 | tee "$LOGFILE"
             ;;
         *)
-            echo "ERROR: Unknown CLI tool '${CLI_TOOL}'. Supported: claude, aider, codex"
+            echo "ERROR: Unknown CLI tool '${CLI_TOOL}'. Supported: claude, cursor, aider, codex"
             exit 1
             ;;
     esac

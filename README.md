@@ -110,14 +110,15 @@ Starts an agent loop. The agent reads the task board, claims a task, works on it
 
 ```bash
 gitcrew spawn Agent-A feature              # Claude Code (default)
-gitcrew spawn Agent-B bugfix --cli aider   # Use Aider
-gitcrew spawn Agent-C quality --cli codex  # Use Codex CLI
+gitcrew spawn Agent-B bugfix --cli cursor  # Use Cursor Agent
+gitcrew spawn Agent-C quality --cli aider  # Use Aider
+gitcrew spawn Agent-D docs --cli codex     # Use Codex CLI
 gitcrew spawn Agent-A feature --once       # Single session (no loop)
 gitcrew spawn Agent-A feature --dry-run    # Preview without executing
 gitcrew spawn Agent-A feature --docker     # Run in Docker container
 ```
 
-**Supported CLI tools:** `claude` (Claude Code), `aider`, `codex`
+**Supported CLI tools:** `claude` (Claude Code), `cursor` (Cursor Agent), `aider`, `codex`
 
 ### `gitcrew task`
 

@@ -40,6 +40,19 @@ test_spawn_dry_run_shows_command() {
     teardown_sandbox "$sandbox"
 }
 
+test_spawn_dry_run_cursor() {
+    local sandbox
+    sandbox=$(setup_sandbox)
+    cd "$sandbox"
+    "$GITCREW" init --no-docker --no-hooks 2>&1 >/dev/null
+
+    local output
+    output=$("$GITCREW" spawn Agent-B bugfix --cli cursor --dry-run --once 2>&1)
+    assert_contains "$output" "agent -p"
+
+    teardown_sandbox "$sandbox"
+}
+
 test_spawn_dry_run_aider() {
     local sandbox
     sandbox=$(setup_sandbox)

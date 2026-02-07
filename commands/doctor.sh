@@ -216,6 +216,12 @@ echo ""
 
 # --- Agent CLI tools ---
 echo -e "${GITCREW_BOLD}Agent CLI Tools:${GITCREW_NC}"
+# Check cursor's 'agent' CLI separately (different binary name)
+if command -v agent &>/dev/null; then
+    check_pass "cursor (agent) CLI available"
+else
+    check_warn "cursor (agent) CLI not found in PATH"
+fi
 for tool in claude aider codex; do
     if command -v "$tool" &>/dev/null; then
         check_pass "${tool} CLI available"

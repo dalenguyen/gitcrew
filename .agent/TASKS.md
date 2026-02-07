@@ -8,6 +8,7 @@
 
 ## ✅ Done
 <!-- Agents move completed tasks here with a short summary -->
+- [x] Feature: add Cursor agent CLI support to spawn and run-loop — Added cursor (agent CLI) as supported tool in spawn, run-loop, doctor, docs, and README (2026-02-07)
 - [x] Feature: add bash test suite for gitcrew CLI — 43 tests covering all 6 commands with zero-dep bash runner (2026-02-07)
 - [x] Chore: configure .agent/run-tests.sh for this repo — Configured to call bash tests/runner.sh (2026-02-07)
 - [x] Chore: install gitcrew hooks with working test harness — Installed pre-push hook via gitcrew hooks (2026-02-07)
