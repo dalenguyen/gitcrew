@@ -22,8 +22,8 @@ echo "  In Progress: $LOCKED  |  Backlog: $BACKLOG  |  Done: $DONE"
 echo ""
 
 echo "--- Active Agent Branches ---"
-git for-each-ref --sort=-committerdate refs/heads refs/remotes/origin --format='%(refname:short)' 2>/dev/null | grep -i "agent" | while read b; do
-    LAST=$(git log -1 --format="%ar — %s" "$b" 2>/dev/null)
+git for-each-ref --sort=-committerdate refs/heads refs/remotes/origin --format='%(refname:short)' 2>/dev/null | grep -i "agent" | while IFS= read -r b; do
+    LAST=$(git log -1 --format="%ar — %s" "$b" 2>/dev/null || echo "unknown")
     echo "  $b ($LAST)"
 done
 echo ""
