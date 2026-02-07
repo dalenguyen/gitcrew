@@ -129,6 +129,17 @@ case "$1" in
         echo "gitcrew v${VERSION}"
         exit 0
         ;;
+    --completions)
+        shell="${2:-bash}"
+        comp_file="${SCRIPT_DIR}/completions/gitcrew.${shell}"
+        if [ -f "$comp_file" ]; then
+            cat "$comp_file"
+        else
+            echo "Error: No completions for '${shell}'. Available: bash, zsh" >&2
+            exit 1
+        fi
+        exit 0
+        ;;
     init|spawn|monitor|task|doctor|hooks|log|status)
         run_command "$@"
         ;;
