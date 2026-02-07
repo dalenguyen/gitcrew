@@ -45,9 +45,7 @@ the task board.
 4. Push your branch: `git push origin AGENT_NAME/<task-name>`
    - The pre-push hook will verify your branch includes all of `origin/main`
    - If it blocks, run `git pull --rebase origin main` and push again
-5. **Automatic issue + PR + review + merge (recommended):**
-   - Run **`gitcrew pr flow`** — it creates the GitHub issue (if none yet), creates the PR, runs the code review in an isolated directory (parallel-safe), posts the review as a PR comment, and **merges if there are no "Must fix" items**. If the review finds blocking issues, fix them, then run `gitcrew pr flow` again.
-   - Optional: `gitcrew pr create` then `gitcrew pr review` (with `--post`) if you want to do steps separately; or `gitcrew pr flow --skip-review` to merge without running the review agent.
+5. **Run `gitcrew pr flow` (required when done).** This creates the GitHub issue (if none yet), opens the PR, runs the code review in an isolated directory (parallel-safe), posts the review as a PR comment, and **merges if there are no "Must fix" items**. Do this automatically every time you finish a task. If the review finds blocking issues, fix them, then run `gitcrew pr flow` again. (Only if you cannot use `gh` or the flow fails: use `gitcrew pr flow --skip-review` to merge without review, or do steps manually.)
 6. Update `.agent/TASKS.md`: move task to Done with a one-line summary
 7. Log what you did in `.agent/LOG.md`
 8. Pick the next task. Repeat.
@@ -82,6 +80,7 @@ If you were started with `gitcrew spawn ... --docker`, your repo is a clone of a
 
 ## Critical Rules
 
+- When your task is done (tests pass, branch pushed), **always run `gitcrew pr flow`** so the issue, PR, review, and merge happen automatically.
 - NEVER use `--force` or `--no-verify` when pushing
 - NEVER push directly to main without running tests first
 - If you have attempted the same fix more than 3 times without progress,

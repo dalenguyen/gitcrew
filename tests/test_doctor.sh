@@ -91,3 +91,55 @@ test_doctor_run_tests_configured_when_customized() {
 
     teardown_sandbox "$sandbox"
 }
+
+test_doctor_help_shows_usage() {
+    local sandbox exit_code
+    sandbox=$(setup_sandbox)
+    cd "$sandbox"
+
+    local output
+    output=$("$GITCREW" doctor --help 2>&1)
+    assert_contains "$output" "USAGE"
+    assert_contains "$output" "OPTIONS"
+    assert_contains "$output" "--fix"
+    exit_code=0; "$GITCREW" doctor --help >/dev/null 2>&1 || exit_code=$?
+    assert_eq "0" "$exit_code" "doctor --help should exit 0"
+    exit_code=0; "$GITCREW" doctor -h >/dev/null 2>&1 || exit_code=$?
+    assert_eq "0" "$exit_code" "doctor -h should exit 0"
+
+    teardown_sandbox "$sandbox"
+}
+
+test_doctor_unknown_option_fails() {
+    local sandbox
+    sandbox=$(setup_sandbox)
+    cd "$sandbox"
+
+    local output
+    output=$("$GITCREW" doctor --unknown 2>&1)
+    assert_contains "$output" "Unknown option"
+    assert_contains "$output" "unknown"
+    local exit_code=0
+    "$GITCREW" doctor --unknown >/dev/null 2>&1 || exit_code=$?
+    assert_eq "1" "$exit_code" "doctor --unknown should exit 1"
+
+    teardown_sandbox "$sandbox"
+}
+
+test_doctor_fix_makes_script_executable() {
+    local sandbox
+    sandbox=$(setup_sandbox)
+    cd "$sandbox"
+
+    "$GITCREW" init --no-hooks >/dev/null 2>&1
+    chmod -x .agent/run-tests.sh
+    [ ! -x .agent/run-tests.sh ] || { echo "precondition: run-tests.sh should not be executable"; return 1; }
+
+    local output
+    output=$("$GITCREW" doctor --fix 2>&1)
+    assert_contains "$output" "Fixed"
+    assert_contains "$output" "executable"
+    [ -x .agent/run-tests.sh ] || { echo "run-tests.sh should be executable after doctor --fix"; return 1; }
+
+    teardown_sandbox "$sandbox"
+}

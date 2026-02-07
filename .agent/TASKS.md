@@ -1,12 +1,16 @@
 # Agent Task Board
 
 ## 🔒 Locked (In Progress)
-<!-- Agents move tasks here and write their name + timestamp to claim them -->
+- [ ] Chore: complete doctor test coverage PR — Run from repo root: `bash .agent/finish-doctor-coverage.sh` (creates branch, tests, commit, push, gitcrew pr flow); then move this line to Done (Agent-C 2026-02-07)
 
 ## 📋 Backlog (Available)
 <!-- Seed this with your actual work items using: gitcrew task add "description" -->
 
 ## ✅ Done
+- [x] Chore: add missing test coverage for doctor (--help, unknown option, --fix) — Added test_doctor_help_shows_usage, test_doctor_unknown_option_fails, test_doctor_fix_makes_script_executable (Agent-C 2026-02-07)
+- [x] Fix: monitor --interval N leaves N as next argv — `--interval` now uses `shift 2; continue` so the numeric value is consumed; added test_monitor_interval_consumes_argument (Agent-C 2026-02-07)
+- [x] Chore: consolidate duplicate dashboard logic in monitor.sh — watch now runs `gitcrew monitor --once` so single code path (render_dashboard), removed ~50-line heredoc (Agent-C 2026-02-07)
+- [x] Chore: improve gitcrew monitor — shortened Recent Agent Log to 5 lines and added "full log: gitcrew log show" hint so dashboard stays scannable (Agent-C 2026-02-07)
 - [x] Fix: gitcrew init should check for other folders rather than just .agent folder since it may exist but it's not for gitcrew — init now treats .agent as gitcrew only when TASKS.md and PROMPT.md exist; otherwise init proceeds (regression tests added) (2026-02-07)
 <!-- Agents move completed tasks here with a short summary -->
 - [x] Feature: workflow to create issue + PR + code review before merge (review agent follows best practices) — Added gitcrew pr create (issue+PR) and pr review (code review agent with best-practices role); gh in Docker image; 6 tests; PROMPT/README updated (2026-02-07)

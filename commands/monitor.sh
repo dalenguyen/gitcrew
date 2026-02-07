@@ -6,6 +6,8 @@
 set -euo pipefail
 
 AGENT_DIR=".agent"
+# Keep dashboard scannable: show only last N log lines (full log: gitcrew log show)
+LOG_TAIL_LINES=5
 
 print_monitor_usage() {
     echo -e "${GITCREW_BOLD}USAGE${GITCREW_NC}"
@@ -23,7 +25,7 @@ ONCE=false
 
 while [ $# -gt 0 ]; do
     case "$1" in
-        --interval) INTERVAL="$2"; shift ;;
+        --interval) INTERVAL="$2"; shift 2; continue ;;
         --once)     ONCE=true ;;
         -h|--help)  print_monitor_usage; exit 0 ;;
         *)
@@ -94,13 +96,14 @@ render_dashboard() {
     git log --oneline --all -10 2>/dev/null || echo "  (no commits yet)"
     echo ""
 
-    # Agent log tail
+    # Agent log tail (short so dashboard stays scannable)
     if [ -f "${AGENT_DIR}/LOG.md" ]; then
         local LOG_LINES
         LOG_LINES=$(wc -l < "${AGENT_DIR}/LOG.md")
         if [ "$LOG_LINES" -gt 3 ]; then
             echo "--- Recent Agent Log ---"
-            tail -15 "${AGENT_DIR}/LOG.md"
+            tail -${LOG_TAIL_LINES} "${AGENT_DIR}/LOG.md"
+            echo "  (full log: gitcrew log show)"
             echo ""
         fi
     fi
@@ -128,53 +131,17 @@ if [ "$ONCE" = true ]; then
 else
     # Check if 'watch' is available
     if command -v watch &>/dev/null; then
-        # Export function for watch
-        export -f render_dashboard 2>/dev/null || true
-        export AGENT_DIR
+        # Use same binary the user invoked so watch runs the single code path (render_dashboard via --once)
+        if [ -n "${GITCREW_DIR:-}" ] && [ -x "${GITCREW_DIR}/gitcrew" ]; then
+            GITCREW_BIN="${GITCREW_DIR}/gitcrew"
+        else
+            GITCREW_BIN="gitcrew"
+        fi
 
         echo -e "${GITCREW_CYAN}Starting monitor (refresh every ${INTERVAL}s). Press Ctrl+C to stop.${GITCREW_NC}"
         echo ""
 
-        # Use a temp script since 'watch' can't easily call exported functions on all platforms
-        WATCH_SCRIPT=$(mktemp)
-        cat > "$WATCH_SCRIPT" << 'WATCHEOF'
-#!/usr/bin/env bash
-AGENT_DIR=".agent"
-
-echo "=========================================="
-echo "  GITCREW AGENT MONITOR — $(date '+%Y-%m-%d %H:%M:%S')"
-echo "=========================================="
-echo ""
-
-echo "--- Task Status ---"
-BACKLOG=0; DONE=0; LOCKED=0
-if [ -f "${AGENT_DIR}/TASKS.md" ]; then
-    BACKLOG=$(awk '/## .* Backlog/,/^## /' "${AGENT_DIR}/TASKS.md" 2>/dev/null | grep -c "^- \[ \]" || echo 0)
-    DONE=$(awk '/## .* Done/,/^## |$/' "${AGENT_DIR}/TASKS.md" 2>/dev/null | grep -c "^- \[x\]" || echo 0)
-    LOCKED=$(awk '/## .* Locked/,/^## /' "${AGENT_DIR}/TASKS.md" 2>/dev/null | grep -c "^- \[" || echo 0)
-fi
-echo "  In Progress: ${LOCKED}  |  Backlog: ${BACKLOG}  |  Done: ${DONE}"
-echo ""
-
-echo "--- Active Agent Branches ---"
-git for-each-ref --sort=-committerdate refs/heads refs/remotes/origin --format='%(refname:short)' 2>/dev/null | grep -i "agent" | while IFS= read -r b; do
-    LAST=$(git log -1 --format="%ar — %s" "$b" 2>/dev/null || echo "unknown")
-    echo "  ${b} (${LAST})"
-done
-echo ""
-
-echo "--- Recent Commits ---"
-git log --oneline --all -10 2>/dev/null || echo "  (no commits)"
-echo ""
-
-if [ -f "${AGENT_DIR}/LOG.md" ]; then
-    echo "--- Recent Agent Log ---"
-    tail -15 "${AGENT_DIR}/LOG.md"
-fi
-WATCHEOF
-        chmod +x "$WATCH_SCRIPT"
-        watch -n "$INTERVAL" bash "$WATCH_SCRIPT"
-        rm -f "$WATCH_SCRIPT"
+        watch -n "$INTERVAL" "$GITCREW_BIN" monitor --once
     else
         echo -e "${GITCREW_YELLOW}Warning: 'watch' not found. Falling back to manual refresh loop.${GITCREW_NC}"
         echo -e "Press Ctrl+C to stop."
