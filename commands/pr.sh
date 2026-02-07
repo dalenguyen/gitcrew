@@ -14,6 +14,11 @@ print_pr_usage() {
     echo -e "${GITCREW_BOLD}SUBCOMMANDS${GITCREW_NC}"
     echo -e "    ${GITCREW_GREEN}create${GITCREW_NC}   Create GitHub issue (if none exists) and open a PR for current branch"
     echo -e "    ${GITCREW_GREEN}review${GITCREW_NC}    Run code review on the PR for current branch (AI agent, best practices)"
+    echo -e "    ${GITCREW_GREEN}flow${GITCREW_NC}     Create PR (if needed) → review → merge if no 'Must fix' items (or exit 1)"
+    echo -e "    ${GITCREW_GREEN}merge${GITCREW_NC}     Merge the PR for current branch (no review)"
+    echo ""
+    echo -e "${GITCREW_BOLD}OPTIONS (flow)${GITCREW_NC}"
+    echo "    --skip-review   Skip AI review and merge immediately (e.g. CI or after manual review)"
     echo ""
     echo -e "${GITCREW_BOLD}OPTIONS (create)${GITCREW_NC}"
     echo "    --title <t>     Issue/PR title (default: from branch name or last commit)"
@@ -30,6 +35,9 @@ print_pr_usage() {
     echo "    gitcrew pr create --title \"Add login retry\" --body \"Fixes #42\""
     echo "    gitcrew pr review"
     echo "    gitcrew pr review --post"
+    echo "    gitcrew pr flow              # create → review → merge if OK"
+    echo "    gitcrew pr flow --skip-review   # create → merge (no AI review)"
+    echo "    gitcrew pr merge             # merge current branch PR"
     echo ""
 }
 
@@ -223,6 +231,158 @@ EOF
     fi
 }
 
+# Returns 0 if review has no blocking "Must fix" items, 1 if it has unchecked Must fix items.
+review_has_blocking_issues() {
+    local review_file="$1"
+    local in_must_fix=0
+    while IFS= read -r line; do
+        if echo "$line" | grep -qE '^## .*[Mm]ust fix'; then
+            in_must_fix=1
+            continue
+        fi
+        if [ "$in_must_fix" = 1 ]; then
+            if echo "$line" | grep -qE '^## '; then
+                break
+            fi
+            if echo "$line" | grep -qE '^\s*-\s+\[\s\]'; then
+                return 1
+            fi
+        fi
+    done < "$review_file"
+    return 0
+}
+
+# --- pr merge ---
+cmd_merge() {
+    require_gh
+    check_gh_version
+
+    local branch
+    branch=$(git branch --show-current 2>/dev/null || true)
+    if [ -z "$branch" ] || [ "$branch" = "main" ] || [ "$branch" = "master" ]; then
+        echo -e "${GITCREW_RED}Error: Not on a feature branch.${GITCREW_NC}"
+        exit 1
+    fi
+
+    if ! gh pr view "$branch" &>/dev/null 2>&1; then
+        echo -e "${GITCREW_RED}Error: No open PR for branch '${branch}'.${GITCREW_NC}"
+        echo "Create one with: gitcrew pr create"
+        exit 1
+    fi
+
+    echo -e "${GITCREW_CYAN}Merging PR for ${branch}...${GITCREW_NC}"
+    gh pr merge "$branch" --squash --delete-branch || {
+        echo -e "${GITCREW_RED}Merge failed. Try: gh pr merge ${branch}${GITCREW_NC}"
+        exit 1
+    }
+    echo -e "${GITCREW_GREEN}PR merged.${GITCREW_NC}"
+}
+
+# --- pr flow: create (if needed) → review → merge if no Must fix ---
+cmd_flow() {
+    require_gh
+    check_gh_version
+
+    local skip_review=false
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --skip-review) skip_review=true ;;
+            -h|--help) print_pr_usage; exit 0 ;;
+            *) ;;
+        esac
+        shift
+    done
+
+    local branch
+    branch=$(git branch --show-current 2>/dev/null || true)
+    if [ -z "$branch" ] || [ "$branch" = "main" ] || [ "$branch" = "master" ]; then
+        echo -e "${GITCREW_RED}Error: Create a feature branch first.${GITCREW_NC}"
+        exit 1
+    fi
+
+    # 1. Ensure PR exists
+    if ! gh pr view "$branch" &>/dev/null 2>&1; then
+        echo -e "${GITCREW_CYAN}Step 1: No PR yet. Creating...${GITCREW_NC}"
+        cmd_create
+        echo ""
+    else
+        echo -e "${GITCREW_CYAN}Step 1: PR exists for ${branch}.${GITCREW_NC}"
+        echo ""
+    fi
+
+    if [ "$skip_review" = true ]; then
+        echo -e "${GITCREW_CYAN}Step 2: Skipping review (--skip-review). Merging...${GITCREW_NC}"
+        gh pr merge "$branch" --squash --delete-branch || {
+            echo -e "${GITCREW_RED}Merge failed.${GITCREW_NC}"
+            exit 1
+        }
+        echo -e "${GITCREW_GREEN}PR merged.${GITCREW_NC}"
+        return 0
+    fi
+
+    # 2. Run review (capture output, post to PR)
+    echo -e "${GITCREW_CYAN}Step 2: Running code review...${GITCREW_NC}"
+    local review_file
+    review_file=$(mktemp)
+    trap "rm -f ${review_file}" EXIT
+
+    local diff pr_num pr_title cli=""
+    pr_num=$(gh pr view "$branch" --json number --jq '.number')
+    pr_title=$(gh pr view "$branch" --json title --jq '.title')
+    diff=$(gh pr diff "$branch" 2>/dev/null) || true
+
+    if [ -z "$diff" ]; then
+        echo -e "${GITCREW_YELLOW}No diff in PR. Merging.${GITCREW_NC}"
+        gh pr merge "$branch" --squash --delete-branch 2>/dev/null && echo -e "${GITCREW_GREEN}PR merged.${GITCREW_NC}" || exit 1
+        return 0
+    fi
+
+    [ -f "${AGENT_DIR}/agent.env" ] && source "${AGENT_DIR}/agent.env" 2>/dev/null || true
+    cli="${AGENT_CLI:-cursor}"
+
+    local review_prompt
+    review_prompt=$(printf 'You are performing a **code review**. Output your review in the required format (summary, Must fix, Should fix, Suggestions). Be specific.\n\n**PR:** #%s — %s\n**Branch:** %s\n\n---\nDIFF:\n```\n%s\n```\n---' "$pr_num" "$pr_title" "$branch" "$diff")
+    [ -f "${AGENT_DIR}/roles/review.md" ] && review_prompt=$(cat "${AGENT_DIR}/roles/review.md")$'\n\n'"$review_prompt"
+
+    local prompt_file
+    prompt_file=$(mktemp)
+    trap "rm -f ${review_file} ${prompt_file}" EXIT
+    echo "$review_prompt" > "$prompt_file"
+
+    case "$cli" in
+        claude) claude --dangerously-skip-permissions -p "$prompt_file" 2>/dev/null > "$review_file" || true ;;
+        cursor|agent) agent -p "$prompt_file" 2>/dev/null > "$review_file" || true ;;
+        aider) aider --message "$(cat "$prompt_file")" --no-auto-commits 2>/dev/null > "$review_file" || true ;;
+        *) echo -e "${GITCREW_RED}Error: Unsupported CLI '${cli}'.${GITCREW_NC}"; exit 1 ;;
+    esac
+
+    if [ ! -s "$review_file" ]; then
+        echo -e "${GITCREW_YELLOW}Review agent produced no output. Merge anyway? (flow requires review)${GITCREW_NC}"
+        exit 1
+    fi
+
+    cat "$review_file"
+    echo ""
+    gh pr comment "$branch" --body-file "$review_file" 2>/dev/null || true
+
+    # 3. Check for Must fix
+    if ! review_has_blocking_issues "$review_file"; then
+        echo -e "${GITCREW_RED}========================================${GITCREW_NC}"
+        echo -e "${GITCREW_RED}  Review found 'Must fix' items. Address them, then run:${GITCREW_NC}"
+        echo -e "    ${GITCREW_BOLD}git add -A && git commit -m \"...\" && git push && gitcrew pr flow${GITCREW_NC}"
+        echo -e "${GITCREW_RED}========================================${GITCREW_NC}"
+        exit 1
+    fi
+
+    # 4. Merge
+    echo -e "${GITCREW_CYAN}Step 3: No blocking issues. Merging PR...${GITCREW_NC}"
+    gh pr merge "$branch" --squash --delete-branch || {
+        echo -e "${GITCREW_RED}Merge failed.${GITCREW_NC}"
+        exit 1
+    }
+    echo -e "${GITCREW_GREEN}PR merged.${GITCREW_NC}"
+}
+
 # --- Main ---
 if [ $# -eq 0 ]; then
     print_pr_usage
@@ -235,9 +395,11 @@ shift
 case "$SUBCMD" in
     create) cmd_create "$@" ;;
     review) cmd_review "$@" ;;
+    flow)  cmd_flow "$@" ;;
+    merge) cmd_merge "$@" ;;
     -h|--help) print_pr_usage; exit 0 ;;
     *)
-        echo -e "${GITCREW_RED}Error: Unknown subcommand '$SUBCMD'. Use 'create' or 'review'.${GITCREW_NC}"
+        echo -e "${GITCREW_RED}Error: Unknown subcommand '$SUBCMD'. Use 'create', 'review', 'flow', or 'merge'.${GITCREW_NC}"
         print_pr_usage
         exit 1
         ;;

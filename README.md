@@ -198,10 +198,13 @@ gitcrew pr create                    # Create issue (if needed) + PR for current
 gitcrew pr create --no-issue         # Create PR only, no issue
 gitcrew pr review                    # Run AI code review on this branch's PR
 gitcrew pr review --post             # Run review and post as PR comment
-gitcrew pr review --cli claude       # Use Claude for review (default: cursor or last used)
+gitcrew pr flow                      # Create PR (if needed) → review → merge if no "Must fix"
+gitcrew pr merge                     # Merge current branch's PR (no review)
 ```
 
-The review agent uses the role in `.agent/roles/review.md` (correctness, security, design, testing, docs, style). Run `gitcrew pr review` after pushing your branch and opening a PR; fix any "Must fix" items before merging.
+**Recommended: `gitcrew pr flow`** — Creates the PR (and issue) if missing, runs the code review agent, posts the review on the PR, then **merges only if there are no "Must fix" items**. If the review finds blocking issues, it exits with instructions to fix and run `gitcrew pr flow` again.
+
+The review agent uses `.agent/roles/review.md` (correctness, security, design, testing, docs, style). Fix any "Must fix" items, then re-run `gitcrew pr flow` to merge.
 
 ### `gitcrew docker`
 

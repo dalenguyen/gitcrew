@@ -100,6 +100,8 @@ _gitcrew() {
                     pr_subcmds=(
                         'create:Create issue and PR'
                         'review:Run code review on PR'
+                        'flow:Create → review → merge if no Must fix'
+                        'merge:Merge current branch PR'
                     )
                     _describe -t pr_subcmds 'pr subcommand' pr_subcmds
                     ;;

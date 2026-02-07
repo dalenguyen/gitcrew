@@ -59,7 +59,7 @@ _gitcrew() {
             return 0
             ;;
         pr)
-            COMPREPLY=($(compgen -W "create review --help" -- "$cur"))
+            COMPREPLY=($(compgen -W "create review flow merge --help" -- "$cur"))
             return 0
             ;;
     esac
