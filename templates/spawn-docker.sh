@@ -5,11 +5,21 @@
 #
 # Each agent gets its own filesystem. They share only through
 # git push/pull to a bare upstream repo.
+#
+# Requires: gitcrew docker build (run once to create the image)
 
 set -euo pipefail
 
 AGENT_NAME=${1:?"Usage: spawn-docker.sh <agent-name> [role]"}
 ROLE=${2:-feature}
+IMAGE_NAME="gitcrew-agent"
+
+# Check image exists
+if ! docker image inspect "${IMAGE_NAME}" &>/dev/null; then
+    echo "Error: Image '${IMAGE_NAME}' not found."
+    echo "Run: gitcrew docker build"
+    exit 1
+fi
 
 # Create bare upstream repo if it doesn't exist
 UPSTREAM="/tmp/gitcrew-upstream.git"
@@ -22,19 +32,11 @@ echo "Spawning ${AGENT_NAME} (role: ${ROLE}) in Docker..."
 
 docker run -d \
     --name "gitcrew-${AGENT_NAME}" \
-    -v "${UPSTREAM}":/upstream \
+    -v "${UPSTREAM}":/upstream:rw \
     -e AGENT_NAME="$AGENT_NAME" \
     -e AGENT_ROLE="$ROLE" \
-    ubuntu:24.04 \
+    "${IMAGE_NAME}" \
     bash -c '
-        apt-get update -qq && apt-get install -y -qq git curl > /dev/null 2>&1
-
-        # Install your language runtime, test tools, and agent CLI here
-        # Examples:
-        #   curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y nodejs
-        #   apt-get install -y python3 python3-pip
-        #   curl -fsSL https://sh.rustup.rs | sh -s -- -y
-
         git clone /upstream /workspace
         cd /workspace
 
@@ -51,6 +53,7 @@ echo ""
 echo "Container 'gitcrew-${AGENT_NAME}' started."
 echo ""
 echo "Useful commands:"
-echo "  docker logs -f gitcrew-${AGENT_NAME}    # Follow agent output"
-echo "  docker stop gitcrew-${AGENT_NAME}       # Stop agent"
-echo "  docker rm gitcrew-${AGENT_NAME}         # Remove container"
+echo "  gitcrew docker logs ${AGENT_NAME}      # Follow agent output"
+echo "  gitcrew docker stop ${AGENT_NAME}      # Stop agent"
+echo "  gitcrew docker ps                      # List all agent containers"
+echo "  gitcrew docker clean                   # Remove all containers"

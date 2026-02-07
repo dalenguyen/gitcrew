@@ -18,6 +18,7 @@ _gitcrew() {
         'hooks:Manage git hooks (pre-push tests)'
         'log:Append to or view agent log'
         'status:Quick overview of agent team status'
+        'docker:Manage Docker-based agent containers'
     )
 
     _arguments -C \
@@ -80,6 +81,18 @@ _gitcrew() {
                     _arguments \
                         '1:subcommand:(show)' \
                         '--lines[Number of lines to show]:count:'
+                    ;;
+                docker)
+                    local -a docker_subcmds
+                    docker_subcmds=(
+                        'build:Build the agent Docker image'
+                        'test:Run tests inside Docker container'
+                        'ps:List running agent containers'
+                        'stop:Stop agent containers'
+                        'logs:Follow agent container logs'
+                        'clean:Remove containers and images'
+                    )
+                    _describe -t docker_subcmds 'docker subcommand' docker_subcmds
                     ;;
             esac
             ;;

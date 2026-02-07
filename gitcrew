@@ -66,6 +66,7 @@ print_usage() {
     echo -e "    ${GREEN}hooks${NC}       Install git hooks for agent safety"
     echo -e "    ${GREEN}log${NC}         Append to or view the agent log"
     echo -e "    ${GREEN}status${NC}      Quick summary of agent team state"
+    echo -e "    ${GREEN}docker${NC}      Manage Docker-based agent containers"
     echo ""
     echo -e "${BOLD}OPTIONS${NC}"
     echo "    -h, --help       Show this help message"
@@ -140,7 +141,7 @@ case "$1" in
         fi
         exit 0
         ;;
-    init|spawn|monitor|task|doctor|hooks|log|status)
+    init|spawn|monitor|task|doctor|hooks|log|status|docker)
         run_command "$@"
         ;;
     *)

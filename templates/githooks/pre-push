@@ -1,9 +1,41 @@
 #!/bin/bash
-# Pre-push hook — blocks pushes if tests fail
+# Pre-push hook — blocks pushes if tests fail or branch is behind main
 # Installed by gitcrew
 #
-# This prevents agents (and humans) from pushing broken code
+# This prevents agents (and humans) from pushing broken or stale code
 # to the shared repository.
+
+# --- Step 1: Check if feature branch is rebased on latest main ---
+
+CURRENT_BRANCH=$(git branch --show-current 2>/dev/null || echo "")
+
+if [ -n "$CURRENT_BRANCH" ] && [ "$CURRENT_BRANCH" != "main" ] && [ "$CURRENT_BRANCH" != "master" ]; then
+    echo "[gitcrew] Checking if branch is up to date with main..."
+
+    git fetch origin main --quiet 2>/dev/null || true
+
+    if git rev-parse --verify origin/main &>/dev/null; then
+        if ! git merge-base --is-ancestor origin/main HEAD; then
+            echo ""
+            echo "=========================================="
+            echo "  PUSH BLOCKED — Branch is behind main."
+            echo ""
+            echo "  Your branch does not contain the latest"
+            echo "  changes from origin/main."
+            echo ""
+            echo "  Run:"
+            echo "    git pull --rebase origin main"
+            echo ""
+            echo "  Then try pushing again."
+            echo "=========================================="
+            echo ""
+            exit 1
+        fi
+        echo "[gitcrew] Branch is up to date with main."
+    fi
+fi
+
+# --- Step 2: Run tests ---
 
 echo "[gitcrew] Running pre-push validation..."
 
