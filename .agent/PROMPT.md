@@ -6,11 +6,14 @@ the task board.
 
 ## Orientation (Do This First, Every Session)
 
+**Refetch new changes** so you have the latest workflow and docs:
+
 1. `git pull origin main`
-2. Read `.agent/LOG.md` for context from previous sessions
-3. Read `.agent/TASKS.md` to see what's available and locked
-4. Run `.agent/detect-project.sh` if this is your first session
-5. Read `README.md` and any `ARCHITECTURE.md` or `CONTRIBUTING.md`
+2. Re-read this file (`.agent/PROMPT.md`) and the repo `README.md` — they are updated when the flow changes (e.g. PR, review, merge).
+3. Read `.agent/LOG.md` for context from previous sessions
+4. Read `.agent/TASKS.md` to see what's available and locked
+5. Run `.agent/detect-project.sh` if this is your first session
+6. Read any `ARCHITECTURE.md` or `CONTRIBUTING.md`
 
 ## Claiming a Task
 
@@ -42,14 +45,12 @@ the task board.
 4. Push your branch: `git push origin AGENT_NAME/<task-name>`
    - The pre-push hook will verify your branch includes all of `origin/main`
    - If it blocks, run `git pull --rebase origin main` and push again
-5. **Create issue + PR and get a code review (recommended):**
-   - Run `gitcrew pr create` to create a GitHub issue (if none yet) and open a PR
-   - Run `gitcrew pr review` to run a code review agent (best practices); fix any "Must fix" items
-   - Optionally `gitcrew pr review --post` to post the review as a PR comment
-6. Merge to main (fast-forward or merge commit)
-7. Update `.agent/TASKS.md`: move task to Done with a one-line summary
-8. Log what you did in `.agent/LOG.md`
-9. Pick the next task. Repeat.
+5. **Automatic issue + PR + review + merge (recommended):**
+   - Run **`gitcrew pr flow`** — it creates the GitHub issue (if none yet), creates the PR, runs the code review in an isolated directory (parallel-safe), posts the review as a PR comment, and **merges if there are no "Must fix" items**. If the review finds blocking issues, fix them, then run `gitcrew pr flow` again.
+   - Optional: `gitcrew pr create` then `gitcrew pr review` (with `--post`) if you want to do steps separately; or `gitcrew pr flow --skip-review` to merge without running the review agent.
+6. Update `.agent/TASKS.md`: move task to Done with a one-line summary
+7. Log what you did in `.agent/LOG.md`
+8. Pick the next task. Repeat.
 
 ## Merge Conflict Protocol
 

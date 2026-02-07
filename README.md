@@ -199,12 +199,15 @@ gitcrew pr create --no-issue         # Create PR only, no issue
 gitcrew pr review                    # Run AI code review on this branch's PR
 gitcrew pr review --post             # Run review and post as PR comment
 gitcrew pr flow                      # Create PR (if needed) → review → merge if no "Must fix"
+gitcrew pr flow --skip-review        # Create PR (if needed) → merge (automatic, no AI review)
 gitcrew pr merge                     # Merge current branch's PR (no review)
 ```
 
-**Recommended: `gitcrew pr flow`** — Creates the PR (and issue) if missing, runs the code review agent, posts the review on the PR, then **merges only if there are no "Must fix" items**. If the review finds blocking issues, it exits with instructions to fix and run `gitcrew pr flow` again.
+**Recommended: `gitcrew pr flow`** — Creates the PR (and issue) if missing, runs the code review agent, posts the review on the PR, then **merges only if there are no "Must fix" items**. Use **`gitcrew pr flow --skip-review`** to merge automatically without running the review agent (e.g. after manual review or in CI). If the review finds blocking issues, it exits with instructions to fix and run `gitcrew pr flow` again.
 
 The review agent uses `.agent/roles/review.md` (correctness, security, design, testing, docs, style). Fix any "Must fix" items, then re-run `gitcrew pr flow` to merge.
+
+**Review isolation:** The review step runs in a temporary directory **outside the repo**, is **cleaned up** when done, and is **parallel-safe**—multiple agents (or `pr review` / `pr flow` invocations) can run at once without conflicting.
 
 ### `gitcrew docker`
 
@@ -233,18 +236,21 @@ There is **no orchestrator agent**. Agents coordinate through:
 
 ### Agent Lifecycle
 
+Everything is automatic from planning through merged PR:
+
 ```
-1. git pull origin main
+1. git pull origin main — refetch; re-read .agent/PROMPT.md and README for latest workflow
 2. Read .agent/LOG.md (context from other agents)
 3. Read .agent/TASKS.md (pick an available task)
 4. Lock the task (commit + push to main)
 5. Create feature branch
 6. Work: edit code → run tests → commit (loop)
-7. Merge main → resolve conflicts → run full tests
-8. Push branch → gitcrew pr create (issue + PR) → gitcrew pr review (fix "Must fix" items)
-9. Merge to main, mark task done, log what happened
-10. Go to step 1
+7. Rebase on main → resolve conflicts → run full tests
+8. Push branch → gitcrew pr flow (issue + PR + review + merge, automatic)
+9. Mark task done in TASKS.md, log in LOG.md; go to step 1
 ```
+
+**`gitcrew pr flow`** creates the issue (if needed), opens the PR, runs the code review in an isolated directory (parallel-safe), and merges if there are no "Must fix" items. Use `gitcrew pr flow --skip-review` to merge without running the review agent.
 
 ### Three Deployment Approaches
 

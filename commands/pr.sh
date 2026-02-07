@@ -124,6 +124,49 @@ ${body}"
     echo -e "${GITCREW_GREEN}PR created.${GITCREW_NC}"
 }
 
+# Run code review in an isolated temp directory (outside repo). Cleaned up after.
+# Parallel-safe: each invocation gets its own dir. Writes review output to absolute path $3.
+# Usage: run_review_isolated "<prompt_content>" "<cli>" "<output_file_absolute>"
+run_review_isolated() {
+    local prompt_content="$1"
+    local cli="$2"
+    local output_file="$3"
+    local output_abs="$output_file"
+    [[ "$output_abs" != /* ]] && output_abs="${PWD}/${output_file}"
+
+    (
+        local review_dir
+        review_dir=$(mktemp -d -t gitcrew-review.XXXXXX 2>/dev/null) || review_dir=$(mktemp -d 2>/dev/null)
+        if [ -z "$review_dir" ] || [ ! -d "$review_dir" ]; then
+            echo -e "${GITCREW_RED}Error: Could not create temporary directory for review.${GITCREW_NC}" >&2
+            exit 1
+        fi
+        trap 'rm -rf "$review_dir"' EXIT
+
+        local prompt_path="${review_dir}/prompt.md"
+        local out_path="${review_dir}/out.txt"
+        echo "$prompt_content" > "$prompt_path"
+
+        case "$cli" in
+            claude)
+                (cd "$review_dir" && claude --dangerously-skip-permissions -p "$prompt_path" 2>/dev/null > "$out_path") || true
+                ;;
+            cursor|agent)
+                (cd "$review_dir" && agent -p "$prompt_path" 2>/dev/null > "$out_path") || true
+                ;;
+            aider)
+                (cd "$review_dir" && aider --message "$(cat "$prompt_path")" --no-auto-commits 2>/dev/null > "$out_path") || true
+                ;;
+            *)
+                echo -e "${GITCREW_RED}Error: Unsupported CLI '${cli}'.${GITCREW_NC}" >&2
+                exit 1
+                ;;
+        esac
+
+        [ -f "$out_path" ] && cp "$out_path" "$output_abs"
+    )
+}
+
 # --- pr review ---
 cmd_review() {
     require_gh
@@ -191,30 +234,13 @@ EOF
         review_prompt=$(printf "%s\n\n%s" "$(cat "${AGENT_DIR}/roles/review.md")" "$review_prompt")
     fi
 
-    echo -e "${GITCREW_CYAN}Running code review agent (${cli})...${GITCREW_NC}"
+    echo -e "${GITCREW_CYAN}Running code review agent (${cli}) in isolated directory...${GITCREW_NC}"
     echo ""
 
-    local prompt_file review_output
-    prompt_file=$(mktemp)
+    local review_output
     review_output=$(mktemp)
-    trap "rm -f ${prompt_file} ${review_output}" EXIT
-    echo "$review_prompt" > "$prompt_file"
-
-    case "$cli" in
-        claude)
-            claude --dangerously-skip-permissions -p "$prompt_file" 2>/dev/null > "$review_output" || true
-            ;;
-        cursor|agent)
-            agent -p "$prompt_file" 2>/dev/null > "$review_output" || true
-            ;;
-        aider)
-            aider --message "$(cat "$prompt_file")" --no-auto-commits 2>/dev/null > "$review_output" || true
-            ;;
-        *)
-            echo -e "${GITCREW_RED}Error: Unsupported CLI '${cli}'. Use cursor, claude, or aider.${GITCREW_NC}"
-            exit 1
-            ;;
-    esac
+    trap "rm -f ${review_output}" EXIT
+    run_review_isolated "$review_prompt" "$cli" "$review_output"
 
     if [ ! -s "$review_output" ]; then
         echo -e "${GITCREW_YELLOW}Review agent produced no output. Run with --cli explicitly if needed.${GITCREW_NC}"
@@ -320,8 +346,8 @@ cmd_flow() {
         return 0
     fi
 
-    # 2. Run review (capture output, post to PR)
-    echo -e "${GITCREW_CYAN}Step 2: Running code review...${GITCREW_NC}"
+    # 2. Run review in isolated temp dir (outside repo, cleaned up; parallel-safe)
+    echo -e "${GITCREW_CYAN}Step 2: Running code review in isolated directory...${GITCREW_NC}"
     local review_file
     review_file=$(mktemp)
     trap "rm -f ${review_file}" EXIT
@@ -344,17 +370,7 @@ cmd_flow() {
     review_prompt=$(printf 'You are performing a **code review**. Output your review in the required format (summary, Must fix, Should fix, Suggestions). Be specific.\n\n**PR:** #%s — %s\n**Branch:** %s\n\n---\nDIFF:\n```\n%s\n```\n---' "$pr_num" "$pr_title" "$branch" "$diff")
     [ -f "${AGENT_DIR}/roles/review.md" ] && review_prompt=$(cat "${AGENT_DIR}/roles/review.md")$'\n\n'"$review_prompt"
 
-    local prompt_file
-    prompt_file=$(mktemp)
-    trap "rm -f ${review_file} ${prompt_file}" EXIT
-    echo "$review_prompt" > "$prompt_file"
-
-    case "$cli" in
-        claude) claude --dangerously-skip-permissions -p "$prompt_file" 2>/dev/null > "$review_file" || true ;;
-        cursor|agent) agent -p "$prompt_file" 2>/dev/null > "$review_file" || true ;;
-        aider) aider --message "$(cat "$prompt_file")" --no-auto-commits 2>/dev/null > "$review_file" || true ;;
-        *) echo -e "${GITCREW_RED}Error: Unsupported CLI '${cli}'.${GITCREW_NC}"; exit 1 ;;
-    esac
+    run_review_isolated "$review_prompt" "$cli" "$review_file"
 
     if [ ! -s "$review_file" ]; then
         echo -e "${GITCREW_YELLOW}Review agent produced no output. Merge anyway? (flow requires review)${GITCREW_NC}"
