@@ -42,10 +42,14 @@ the task board.
 4. Push your branch: `git push origin AGENT_NAME/<task-name>`
    - The pre-push hook will verify your branch includes all of `origin/main`
    - If it blocks, run `git pull --rebase origin main` and push again
-5. Merge to main (fast-forward or merge commit)
-6. Update `.agent/TASKS.md`: move task to Done with a one-line summary
-7. Log what you did in `.agent/LOG.md`
-8. Pick the next task. Repeat.
+5. **Create issue + PR and get a code review (recommended):**
+   - Run `gitcrew pr create` to create a GitHub issue (if none yet) and open a PR
+   - Run `gitcrew pr review` to run a code review agent (best practices); fix any "Must fix" items
+   - Optionally `gitcrew pr review --post` to post the review as a PR comment
+6. Merge to main (fast-forward or merge commit)
+7. Update `.agent/TASKS.md`: move task to Done with a one-line summary
+8. Log what you did in `.agent/LOG.md`
+9. Pick the next task. Repeat.
 
 ## Merge Conflict Protocol
 

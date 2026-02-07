@@ -19,6 +19,7 @@ _gitcrew() {
         'log:Append to or view agent log'
         'status:Quick overview of agent team status'
         'docker:Manage Docker-based agent containers'
+        'pr:Create issue + PR and run code review'
     )
 
     _arguments -C \
@@ -93,6 +94,16 @@ _gitcrew() {
                         'clean:Remove containers and images'
                     )
                     _describe -t docker_subcmds 'docker subcommand' docker_subcmds
+                    ;;
+                pr)
+                    local -a pr_subcmds
+                    pr_subcmds=(
+                        'create:Create issue and PR'
+                        'review:Run code review on PR'
+                        'flow:Create → review → merge if no Must fix'
+                        'merge:Merge current branch PR'
+                    )
+                    _describe -t pr_subcmds 'pr subcommand' pr_subcmds
                     ;;
             esac
             ;;
