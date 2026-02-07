@@ -6,7 +6,7 @@ test_init_creates_agent_directory() {
     sandbox=$(setup_sandbox)
     cd "$sandbox"
 
-    "$GITCREW" init 2>&1 >/dev/null
+    "$GITCREW" init >/dev/null 2>&1
     assert_dir_exists ".agent"
 
     teardown_sandbox "$sandbox"
@@ -17,7 +17,7 @@ test_init_creates_core_files() {
     sandbox=$(setup_sandbox)
     cd "$sandbox"
 
-    "$GITCREW" init 2>&1 >/dev/null
+    "$GITCREW" init >/dev/null 2>&1
 
     assert_file_exists ".agent/TASKS.md"
     assert_file_exists ".agent/LOG.md"
@@ -30,12 +30,25 @@ test_init_creates_core_files() {
     teardown_sandbox "$sandbox"
 }
 
+# Regression: assert_not_contains helper works; init success has no "Error:" in output
+test_init_success_output_has_no_error() {
+    local sandbox
+    sandbox=$(setup_sandbox)
+    cd "$sandbox"
+
+    local output
+    output=$("$GITCREW" init 2>&1)
+    assert_not_contains "$output" "Error:" "init success should not print Error"
+
+    teardown_sandbox "$sandbox"
+}
+
 test_init_creates_role_files() {
     local sandbox
     sandbox=$(setup_sandbox)
     cd "$sandbox"
 
-    "$GITCREW" init 2>&1 >/dev/null
+    "$GITCREW" init >/dev/null 2>&1
 
     assert_file_exists ".agent/roles/feature.md"
     assert_file_exists ".agent/roles/bugfix.md"
@@ -51,7 +64,7 @@ test_init_creates_docker_files() {
     sandbox=$(setup_sandbox)
     cd "$sandbox"
 
-    "$GITCREW" init 2>&1 >/dev/null
+    "$GITCREW" init >/dev/null 2>&1
 
     assert_file_exists ".agent/spawn-docker.sh"
     assert_file_exists ".agent/docker-compose.agents.yml"
@@ -64,7 +77,7 @@ test_init_creates_git_hooks() {
     sandbox=$(setup_sandbox)
     cd "$sandbox"
 
-    "$GITCREW" init 2>&1 >/dev/null
+    "$GITCREW" init >/dev/null 2>&1
 
     assert_file_exists ".githooks/pre-push"
 
@@ -76,7 +89,7 @@ test_init_scripts_are_executable() {
     sandbox=$(setup_sandbox)
     cd "$sandbox"
 
-    "$GITCREW" init 2>&1 >/dev/null
+    "$GITCREW" init >/dev/null 2>&1
 
     [ -x ".agent/detect-project.sh" ] || { echo "detect-project.sh not executable"; return 1; }
     [ -x ".agent/run-tests.sh" ] || { echo "run-tests.sh not executable"; return 1; }
@@ -90,7 +103,7 @@ test_init_no_docker_flag() {
     sandbox=$(setup_sandbox)
     cd "$sandbox"
 
-    "$GITCREW" init --no-docker 2>&1 >/dev/null
+    "$GITCREW" init --no-docker >/dev/null 2>&1
 
     assert_file_exists ".agent/TASKS.md"
     [ ! -f ".agent/spawn-docker.sh" ] || { echo "spawn-docker.sh should not exist"; return 1; }
@@ -104,7 +117,7 @@ test_init_no_roles_flag() {
     sandbox=$(setup_sandbox)
     cd "$sandbox"
 
-    "$GITCREW" init --no-roles 2>&1 >/dev/null
+    "$GITCREW" init --no-roles >/dev/null 2>&1
 
     assert_file_exists ".agent/TASKS.md"
     [ ! -f ".agent/roles/feature.md" ] || { echo "feature.md should not exist"; return 1; }
@@ -118,7 +131,7 @@ test_init_no_hooks_flag() {
     sandbox=$(setup_sandbox)
     cd "$sandbox"
 
-    "$GITCREW" init --no-hooks 2>&1 >/dev/null
+    "$GITCREW" init --no-hooks >/dev/null 2>&1
 
     assert_file_exists ".agent/TASKS.md"
     [ ! -f ".githooks/pre-push" ] || { echo "pre-push should not exist"; return 1; }
@@ -132,7 +145,7 @@ test_init_fails_without_git_repo() {
     cd "$sandbox"
 
     local exit_code=0
-    "$GITCREW" init 2>&1 >/dev/null || exit_code=$?
+    "$GITCREW" init >/dev/null 2>&1 || exit_code=$?
     assert_eq "1" "$exit_code"
 
     cd "$REPO_ROOT"
@@ -144,10 +157,10 @@ test_init_refuses_overwrite_without_force() {
     sandbox=$(setup_sandbox)
     cd "$sandbox"
 
-    "$GITCREW" init 2>&1 >/dev/null
+    "$GITCREW" init >/dev/null 2>&1
 
     local exit_code=0
-    "$GITCREW" init 2>&1 >/dev/null || exit_code=$?
+    "$GITCREW" init >/dev/null 2>&1 || exit_code=$?
     assert_eq "1" "$exit_code"
 
     teardown_sandbox "$sandbox"
@@ -158,10 +171,45 @@ test_init_force_overwrites() {
     sandbox=$(setup_sandbox)
     cd "$sandbox"
 
-    "$GITCREW" init 2>&1 >/dev/null
-    "$GITCREW" init --force 2>&1 >/dev/null
+    "$GITCREW" init >/dev/null 2>&1
+    "$GITCREW" init --force >/dev/null 2>&1
 
     assert_file_exists ".agent/TASKS.md"
+
+    teardown_sandbox "$sandbox"
+}
+
+# Regression: .agent/ may exist for other tools; only refuse overwrite when it's a gitcrew setup
+test_init_succeeds_when_agent_dir_exists_but_not_gitcrew() {
+    local sandbox
+    sandbox=$(setup_sandbox)
+    cd "$sandbox"
+
+    mkdir -p .agent
+    echo "other tool config" > .agent/some-other-file.txt
+
+    "$GITCREW" init >/dev/null 2>&1
+
+    assert_file_exists ".agent/TASKS.md"
+    assert_file_exists ".agent/PROMPT.md"
+    assert_file_exists ".agent/run-tests.sh"
+    # Original non-gitcrew file still there (init adds/overwrites only its own files)
+    assert_file_exists ".agent/some-other-file.txt"
+
+    teardown_sandbox "$sandbox"
+}
+
+test_init_refuses_overwrite_when_agent_dir_is_gitcrew() {
+    local sandbox
+    sandbox=$(setup_sandbox)
+    cd "$sandbox"
+
+    "$GITCREW" init >/dev/null 2>&1
+    echo "custom" >> .agent/TASKS.md
+
+    local exit_code=0
+    "$GITCREW" init >/dev/null 2>&1 || exit_code=$?
+    assert_eq "1" "$exit_code"
 
     teardown_sandbox "$sandbox"
 }

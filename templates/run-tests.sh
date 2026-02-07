@@ -3,6 +3,7 @@
 #
 # Detects your stack and runs tests with minimal, greppable output.
 # The SUMMARY line at the end is what agents look for.
+# TODO: Replace with your project's test commands if auto-detection doesn't fit.
 #
 # Usage:
 #   .agent/run-tests.sh fast   — quick subset (before each commit)

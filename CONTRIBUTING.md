@@ -141,6 +141,7 @@ The test runner (`tests/runner.sh`) provides:
 - Use `local` for function variables
 - Prefer `$(command)` over backticks
 - Add `|| true` after `grep` in pipelines (exit code 1 on no match breaks `set -e`)
+- Use `>/dev/null 2>&1` to silence output (order matters: stdout first, then stderr)
 
 ## Commit Messages
 

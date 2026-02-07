@@ -52,9 +52,13 @@ if ! git rev-parse --is-inside-work-tree &>/dev/null; then
     exit 1
 fi
 
-# Check if .agent/ already exists
-if [ -d "$AGENT_DIR" ] && [ "$FORCE" = false ]; then
-    echo -e "${GITCREW_YELLOW}Warning: ${AGENT_DIR}/ already exists.${GITCREW_NC}"
+# Only refuse overwrite when .agent/ exists and is already a gitcrew setup
+# (has marker files). If .agent/ exists for another tool, we allow init.
+is_gitcrew_agent_dir() {
+    [ -d "$AGENT_DIR" ] && [ -f "${AGENT_DIR}/TASKS.md" ] && [ -f "${AGENT_DIR}/PROMPT.md" ]
+}
+if is_gitcrew_agent_dir && [ "$FORCE" = false ]; then
+    echo -e "${GITCREW_YELLOW}Warning: ${AGENT_DIR}/ already exists and looks like a gitcrew setup.${GITCREW_NC}"
     echo "Use 'gitcrew init --force' to overwrite."
     exit 1
 fi

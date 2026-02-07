@@ -81,6 +81,19 @@ assert_contains() {
     fi
 }
 
+assert_not_contains() {
+    local haystack="$1"
+    local needle="$2"
+    local msg="${3:-output should not contain '$needle'}"
+    if echo "$haystack" | grep -q "$needle"; then
+        echo "  ASSERT FAILED: $msg"
+        echo "    found (should be absent): $needle"
+        return 1
+    else
+        return 0
+    fi
+}
+
 assert_file_exists() {
     local file="$1"
     local msg="${2:-file '$file' should exist}"
@@ -116,7 +129,7 @@ assert_exit_code() {
 }
 
 # Export helpers so test files can use them
-export -f setup_sandbox teardown_sandbox assert_eq assert_contains \
+export -f setup_sandbox teardown_sandbox assert_eq assert_contains assert_not_contains \
           assert_file_exists assert_dir_exists assert_exit_code 2>/dev/null || true
 export REPO_ROOT
 

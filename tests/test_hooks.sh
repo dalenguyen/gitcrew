@@ -6,8 +6,8 @@ test_hooks_installs_pre_push() {
     sandbox=$(setup_sandbox)
     cd "$sandbox"
 
-    "$GITCREW" init --no-hooks 2>&1 >/dev/null
-    "$GITCREW" hooks 2>&1 >/dev/null
+    "$GITCREW" init --no-hooks >/dev/null 2>&1
+    "$GITCREW" hooks >/dev/null 2>&1
 
     assert_file_exists ".githooks/pre-push"
     [ -x ".githooks/pre-push" ] || { echo "pre-push should be executable"; return 1; }
@@ -20,8 +20,8 @@ test_hooks_sets_git_config() {
     sandbox=$(setup_sandbox)
     cd "$sandbox"
 
-    "$GITCREW" init --no-hooks 2>&1 >/dev/null
-    "$GITCREW" hooks 2>&1 >/dev/null
+    "$GITCREW" init --no-hooks >/dev/null 2>&1
+    "$GITCREW" hooks >/dev/null 2>&1
 
     local hooks_path
     hooks_path=$(git config core.hooksPath)
@@ -35,9 +35,9 @@ test_hooks_remove() {
     sandbox=$(setup_sandbox)
     cd "$sandbox"
 
-    "$GITCREW" init --no-hooks 2>&1 >/dev/null
-    "$GITCREW" hooks 2>&1 >/dev/null
-    "$GITCREW" hooks --remove 2>&1 >/dev/null
+    "$GITCREW" init --no-hooks >/dev/null 2>&1
+    "$GITCREW" hooks >/dev/null 2>&1
+    "$GITCREW" hooks --remove >/dev/null 2>&1
 
     local hooks_path
     hooks_path=$(git config core.hooksPath 2>/dev/null || echo "")
@@ -64,7 +64,7 @@ test_hooks_pre_push_blocks_stale_branch() {
     git checkout -b main 2>/dev/null || true
 
     # Initialize gitcrew
-    "$GITCREW" init --no-hooks 2>&1 >/dev/null
+    "$GITCREW" init --no-hooks >/dev/null 2>&1
 
     # Create a simple run-tests.sh that always passes
     cat > .agent/run-tests.sh << 'TESTSEOF'
@@ -135,7 +135,7 @@ test_hooks_pre_push_allows_rebased_branch() {
     git checkout -b main 2>/dev/null || true
 
     # Initialize gitcrew
-    "$GITCREW" init --no-hooks 2>&1 >/dev/null
+    "$GITCREW" init --no-hooks >/dev/null 2>&1
 
     # Create a simple run-tests.sh that always passes
     cat > .agent/run-tests.sh << 'TESTSEOF'
