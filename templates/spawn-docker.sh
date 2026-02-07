@@ -1,7 +1,7 @@
 #!/bin/bash
 # .agent/spawn-docker.sh — spin up an isolated agent container
 #
-# Usage: .agent/spawn-docker.sh <agent-name> [role]
+# Usage: .agent/spawn-docker.sh <agent-name> [role] [--cli tool] [--model m] [--once]
 #
 # Each agent gets its own filesystem. They share only through
 # git push/pull to a bare upstream repo.
@@ -10,8 +10,23 @@
 
 set -euo pipefail
 
-AGENT_NAME=${1:?"Usage: spawn-docker.sh <agent-name> [role]"}
+AGENT_NAME=${1:?"Usage: spawn-docker.sh <agent-name> [role] [--cli tool] [--model m] [--once]"}
 ROLE=${2:-feature}
+AGENT_CLI="claude"
+AGENT_MODEL=""
+AGENT_ONCE="false"
+
+shift 2 2>/dev/null || shift $# 2>/dev/null || true
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --cli)   AGENT_CLI="$2"; shift ;;
+        --model) AGENT_MODEL="$2"; shift ;;
+        --once)  AGENT_ONCE="true" ;;
+        *)       ;;
+    esac
+    shift
+done
+
 IMAGE_NAME="gitcrew-agent"
 
 # Check image exists
@@ -28,25 +43,31 @@ if [ ! -d "$UPSTREAM" ]; then
     git clone --bare . "$UPSTREAM"
 fi
 
-echo "Spawning ${AGENT_NAME} (role: ${ROLE}) in Docker..."
+echo "Spawning ${AGENT_NAME} (role: ${ROLE}, cli: ${AGENT_CLI}) in Docker..."
+[ "$AGENT_ONCE" = "true" ] && echo "  (--once: container will exit after one session)"
 
 docker run -d \
     --name "gitcrew-${AGENT_NAME}" \
     -v "${UPSTREAM}":/upstream:rw \
     -e AGENT_NAME="$AGENT_NAME" \
     -e AGENT_ROLE="$ROLE" \
+    -e AGENT_CLI="$AGENT_CLI" \
+    -e AGENT_MODEL="$AGENT_MODEL" \
+    -e AGENT_ONCE="$AGENT_ONCE" \
     "${IMAGE_NAME}" \
     bash -c '
         git clone /upstream /workspace
         cd /workspace
 
-        # Configure git for this agent
         git config user.name "$AGENT_NAME"
         git config user.email "${AGENT_NAME}@gitcrew.local"
         git remote set-url origin /upstream
 
-        # Run the agent loop
-        exec bash .agent/run-loop.sh "$AGENT_NAME" ".agent/roles/${AGENT_ROLE}.md"
+        RUN_ARGS="--cli ${AGENT_CLI:-claude}"
+        [ -n "${AGENT_MODEL:-}" ] && RUN_ARGS="$RUN_ARGS --model $AGENT_MODEL"
+        [ "$AGENT_ONCE" = "true" ] && RUN_ARGS="$RUN_ARGS --once"
+
+        exec bash .agent/run-loop.sh "$AGENT_NAME" ".agent/roles/${AGENT_ROLE}.md" $RUN_ARGS
     '
 
 echo ""

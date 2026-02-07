@@ -99,9 +99,12 @@ if [ "$USE_DOCKER" = true ]; then
     echo -e "${GITCREW_CYAN}Spawning ${AGENT_NAME} in Docker container (role: ${ROLE})...${GITCREW_NC}"
 
     if [ "$DRY_RUN" = true ]; then
-        echo -e "${GITCREW_DIM}[dry-run] Would run: bash ${AGENT_DIR}/spawn-docker.sh ${AGENT_NAME} ${ROLE}${GITCREW_NC}"
+        echo -e "${GITCREW_DIM}[dry-run] Would run: bash ${AGENT_DIR}/spawn-docker.sh ${AGENT_NAME} ${ROLE} --cli ${CLI_TOOL}${RUN_ONCE:+ --once}${GITCREW_NC}"
     else
-        bash "${AGENT_DIR}/spawn-docker.sh" "$AGENT_NAME" "$ROLE"
+        RUN_ARGS=("$AGENT_NAME" "$ROLE" --cli "$CLI_TOOL")
+        [ -n "$MODEL" ] && RUN_ARGS+=(--model "$MODEL")
+        [ "$RUN_ONCE" = true ] && RUN_ARGS+=(--once)
+        bash "${AGENT_DIR}/spawn-docker.sh" "${RUN_ARGS[@]}"
     fi
     exit 0
 fi
