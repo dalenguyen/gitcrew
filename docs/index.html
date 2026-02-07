@@ -242,12 +242,14 @@
             gap: 12px;
             font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
             font-size: 0.9rem;
-            max-width: 720px;
+            max-width: 600px;
             width: 100%;
+            margin-left: auto;
+            margin-right: auto;
         }
 
-        .install-bar .prompt { color: var(--green); user-select: none; }
-        .install-bar code { color: var(--text); flex: 1; word-break: break-all; }
+        .install-bar .prompt { color: var(--green); user-select: none; flex-shrink: 0; }
+        .install-bar code { color: var(--text); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
         .install-bar .copy-btn {
             background: none;
@@ -259,6 +261,7 @@
             font-size: 0.8rem;
             transition: all 0.2s;
             white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .install-bar .copy-btn:hover {
@@ -563,8 +566,9 @@
             nav .nav-links { display: none; }
 
             .install-bar {
-                flex-direction: column;
-                align-items: flex-start;
+                font-size: 0.8rem;
+                padding: 12px 16px;
+                gap: 8px;
             }
 
             .features-grid { grid-template-columns: 1fr; }
@@ -618,11 +622,12 @@
         <a href="#quickstart" class="btn btn-primary">Get Started</a>
         <a href="https://github.com/dalenguyen/gitcrew" class="btn btn-secondary" target="_blank" rel="noopener">View on GitHub</a>
     </div>
-    <div class="install-bar">
+    <div class="install-bar" title="curl -fsSL https://raw.githubusercontent.com/dalenguyen/gitcrew/main/install.sh | bash">
         <span class="prompt">$</span>
         <code id="install-cmd">curl -fsSL https://raw.githubusercontent.com/dalenguyen/gitcrew/main/install.sh | bash</code>
         <button class="copy-btn" onclick="copyInstall()">Copy</button>
     </div>
+    <p style="margin-top: 12px; font-size: 0.8rem; color: var(--text-dim);">Or clone: <code style="background: var(--bg-code); padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-family: 'SF Mono', monospace; color: var(--cyan);">git clone https://github.com/dalenguyen/gitcrew.git</code></p>
 </section>
 
 <!-- Architecture Diagram -->
