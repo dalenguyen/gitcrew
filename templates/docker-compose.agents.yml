@@ -1,0 +1,68 @@
+# docker-compose.agents.yml
+#
+# Run a team of isolated agent containers.
+#
+# Usage:
+#   # First, create a bare upstream repo:
+#   git clone --bare . /tmp/gitcrew-upstream.git
+#
+#   # Then start the agents:
+#   docker compose -f .agent/docker-compose.agents.yml up
+#
+#   # Scale specific agents:
+#   docker compose -f .agent/docker-compose.agents.yml up --scale agent-a=2
+
+services:
+  agent-a:
+    build: .
+    volumes:
+      - /tmp/gitcrew-upstream.git:/upstream:rw
+    environment:
+      AGENT_NAME: Agent-A
+      AGENT_ROLE: feature
+    command: >
+      bash -c "
+        git clone /upstream /workspace &&
+        cd /workspace &&
+        git config user.name Agent-A &&
+        git config user.email agent-a@gitcrew.local &&
+        git remote set-url origin /upstream &&
+        bash .agent/run-loop.sh Agent-A .agent/roles/feature.md
+      "
+    restart: unless-stopped
+
+  agent-b:
+    build: .
+    volumes:
+      - /tmp/gitcrew-upstream.git:/upstream:rw
+    environment:
+      AGENT_NAME: Agent-B
+      AGENT_ROLE: bugfix
+    command: >
+      bash -c "
+        git clone /upstream /workspace &&
+        cd /workspace &&
+        git config user.name Agent-B &&
+        git config user.email agent-b@gitcrew.local &&
+        git remote set-url origin /upstream &&
+        bash .agent/run-loop.sh Agent-B .agent/roles/bugfix.md
+      "
+    restart: unless-stopped
+
+  agent-c:
+    build: .
+    volumes:
+      - /tmp/gitcrew-upstream.git:/upstream:rw
+    environment:
+      AGENT_NAME: Agent-C
+      AGENT_ROLE: quality
+    command: >
+      bash -c "
+        git clone /upstream /workspace &&
+        cd /workspace &&
+        git config user.name Agent-C &&
+        git config user.email agent-c@gitcrew.local &&
+        git remote set-url origin /upstream &&
+        bash .agent/run-loop.sh Agent-C .agent/roles/quality.md
+      "
+    restart: unless-stopped
