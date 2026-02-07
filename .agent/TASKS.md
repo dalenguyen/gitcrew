@@ -7,6 +7,7 @@
 <!-- Seed this with your actual work items using: gitcrew task add "description" -->
 
 ## ✅ Done
+- [x] Fix: gitcrew init should check for other folders rather than just .agent folder since it may exist but it's not for gitcrew — init now treats .agent as gitcrew only when TASKS.md and PROMPT.md exist; otherwise init proceeds (regression tests added) (2026-02-07)
 <!-- Agents move completed tasks here with a short summary -->
 - [x] Feature: workflow to create issue + PR + code review before merge (review agent follows best practices) — Added gitcrew pr create (issue+PR) and pr review (code review agent with best-practices role); gh in Docker image; 6 tests; PROMPT/README updated (2026-02-07)
 - [x] Feature: add bash/zsh shell completion for gitcrew — Added CONTRIBUTING.md with full dev guide — Agent-B (2026-02-07)
