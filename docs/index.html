@@ -595,6 +595,7 @@
             <li><a href="#commands">Commands</a></li>
             <li><a href="#quickstart">Quickstart</a></li>
             <li><a href="#roles">Roles</a></li>
+            <li><a href="#automatic-flow">Automatic flow</a></li>
             <li><a href="#approaches">Approaches</a></li>
         </ul>
         <a href="https://github.com/dalenguyen/gitcrew" class="github-link" target="_blank" rel="noopener">
@@ -643,7 +644,7 @@
      <span class="yellow">│Worker  │</span>  <span class="green">│Worker  │</span>  <span class="cyan">│& Docs  │</span>
      <span class="yellow">└────────┘</span>  <span class="green">└────────┘</span>  <span class="cyan">└────────┘</span>
 
-  Each agent: <span class="green">pull</span> → <span class="yellow">pick task</span> → <span class="cyan">lock</span> → <span class="highlight">work</span> → <span class="green">test</span> → <span class="yellow">merge</span> → <span class="highlight">repeat</span></div>
+  Each agent: <span class="green">pull</span> → <span class="yellow">pick task</span> → <span class="cyan">lock</span> → <span class="highlight">work</span> → <span class="green">test</span> → <span class="yellow">PR + review</span> → <span class="highlight">merge</span> → <span class="highlight">repeat</span></div>
 </div>
 
 <!-- Commands -->
@@ -684,6 +685,11 @@
                 <div class="feature-icon">&#128274;</div>
                 <h3>gitcrew hooks</h3>
                 <p>Install a pre-push hook that blocks broken code. Agents (and humans) can't push unless tests pass.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">&#128230;</div>
+                <h3>gitcrew pr</h3>
+                <p>Full PR workflow: <code>pr create</code> (issue + PR), <code>pr review</code> (AI review in isolated dir), <code>pr flow</code> (create → review → merge automatically).</p>
             </div>
         </div>
     </div>
@@ -735,7 +741,34 @@ gitcrew spawn Agent-C quality</code></pre>
                 <pre><code>gitcrew spawn Agent-D docs
 gitcrew spawn Agent-E feature --docker</code></pre>
             </div>
+            <div class="step">
+                <h4>Automatic PR flow</h4>
+                <p>After push, one command does issue + PR + code review + merge. Review runs outside the repo (parallel-safe).</p>
+                <pre><code>git push origin Agent-A/your-branch
+gitcrew pr flow</code></pre>
+                <p style="margin-top:8px;font-size:0.85rem;color:var(--text-dim);">Requires <code>gh</code> 2.0+. Use <code>gitcrew pr flow --skip-review</code> to merge without running the review agent.</p>
+            </div>
         </div>
+    </div>
+</section>
+
+<!-- Full automatic flow -->
+<section id="automatic-flow" style="background: var(--bg-card); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+    <div class="section-inner">
+        <p class="section-label">End-to-end</p>
+        <h2 class="section-title">Everything automatic</h2>
+        <p class="section-desc">
+            From planning to merged PR: task board, parallel agents, issue creation, PR, code review, and merge in one flow.
+        </p>
+        <div class="steps" style="grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); counter-reset: step;">
+            <div class="step"><h4>Planning</h4><p><code>gitcrew task add</code> seeds the board. Agents read <code>.agent/TASKS.md</code>.</p></div>
+            <div class="step"><h4>Development</h4><p><code>gitcrew spawn Agent-X role</code> — each agent picks a task, locks it, works on a branch.</p></div>
+            <div class="step"><h4>Parallel</h4><p>Multiple agents run at once. Review runs in an isolated temp dir; no conflicts.</p></div>
+            <div class="step"><h4>Issue + PR</h4><p><code>gitcrew pr create</code> creates a GitHub issue (if needed) and opens the PR.</p></div>
+            <div class="step"><h4>Review</h4><p><code>gitcrew pr review</code> runs the AI reviewer (outside repo, cleaned up). Post with <code>--post</code>.</p></div>
+            <div class="step"><h4>Merge</h4><p><code>gitcrew pr flow</code> does create → review → merge if no &quot;Must fix&quot; items. Fully automatic.</p></div>
+        </div>
+        <p style="margin-top: 24px; color: var(--text-dim); font-size: 0.95rem;">Refetch the latest workflow: <code style="background: var(--bg-code); padding: 2px 8px; border-radius: 4px;">git pull origin main</code> and re-read <code>.agent/PROMPT.md</code> and the repo README at the start of each session.</p>
     </div>
 </section>
 

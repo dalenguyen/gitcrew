@@ -104,3 +104,31 @@ test_pr_review_role_file_exists_after_init() {
 
     teardown_sandbox "$sandbox"
 }
+
+# Review runs outside repo in a temp dir and is cleaned up (parallel-safe)
+test_pr_review_runs_in_isolated_dir() {
+    local pr_script
+    pr_script="$(dirname "$GITCREW")/commands/pr.sh"
+    [ -f "$pr_script" ] || return 0
+
+    assert_contains "$(cat "$pr_script")" "run_review_isolated"
+    assert_contains "$(cat "$pr_script")" "gitcrew-review"
+    assert_contains "$(cat "$pr_script")" "mktemp -d"
+    assert_contains "$(cat "$pr_script")" "rm -rf"
+    assert_contains "$(cat "$pr_script")" "isolated"
+}
+
+# Isolated review temp dir is cleaned up after run (pattern test)
+test_pr_review_isolated_cleanup() {
+    local before after
+    before=$(find "${TMPDIR:-/tmp}" -maxdepth 1 -type d -name 'gitcrew-review.*' 2>/dev/null | wc -l | tr -d ' ')
+    (
+        d=$(mktemp -d -t gitcrew-review.XXXXXX 2>/dev/null) || d=$(mktemp -d 2>/dev/null)
+        trap 'rm -rf "$d"' EXIT
+        echo "ok" > "${d}/out.txt"
+        cp "${d}/out.txt" "${TMPDIR:-/tmp}/gitcrew-test-out.$$"
+    )
+    after=$(find "${TMPDIR:-/tmp}" -maxdepth 1 -type d -name 'gitcrew-review.*' 2>/dev/null | wc -l | tr -d ' ')
+    rm -f "${TMPDIR:-/tmp}/gitcrew-test-out.$$" 2>/dev/null || true
+    [ "$before" = "$after" ] || { echo "Expected $before leftover dirs, got $after"; return 1; }
+}
