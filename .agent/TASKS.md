@@ -2,11 +2,11 @@
 
 ## 🔒 Locked (In Progress)
 <!-- Agents move tasks here and write their name + timestamp to claim them -->
+- [ ] Chore: add CONTRIBUTING.md with development guide — locked by **Agent-B** at 2026-02-07 01:51
+- [ ] Feature: add bash/zsh shell completion for gitcrew — locked by **Agent-A** at 2026-02-07 01:51
 
 ## 📋 Backlog (Available)
 <!-- Seed this with your actual work items using: gitcrew task add "description" -->
-- [ ] Feature: add bash/zsh shell completion for gitcrew
-- [ ] Chore: add CONTRIBUTING.md with development guide
 
 ## ✅ Done
 <!-- Agents move completed tasks here with a short summary -->
