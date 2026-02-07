@@ -35,7 +35,7 @@ test_spawn_dry_run_shows_command() {
     local output
     output=$("$GITCREW" spawn Agent-A feature --dry-run --once 2>&1)
     assert_contains "$output" "dry-run"
-    assert_contains "$output" "claude"
+    assert_contains "$output" "cursor"
 
     teardown_sandbox "$sandbox"
 }
@@ -110,6 +110,25 @@ test_spawn_docker_dry_run_passes_once_and_cli() {
     output=$("$GITCREW" spawn Agent-B bugfix --docker --dry-run --cli cursor 2>&1)
     assert_contains "$output" "spawn-docker.sh"
     assert_contains "$output" "cursor"
+
+    teardown_sandbox "$sandbox"
+}
+
+test_spawn_remembers_last_cli() {
+    local sandbox
+    sandbox=$(setup_sandbox)
+    cd "$sandbox"
+    "$GITCREW" init --no-docker --no-hooks 2>&1 >/dev/null
+
+    # First spawn with --cli aider; should write .agent/agent.env
+    "$GITCREW" spawn Agent-A feature --cli aider --dry-run --once 2>&1 >/dev/null
+    assert_file_exists ".agent/agent.env"
+    assert_contains "$(cat .agent/agent.env)" "aider"
+
+    # Second spawn without --cli should use aider (last used)
+    local output
+    output=$("$GITCREW" spawn Agent-B feature --dry-run --once 2>&1)
+    assert_contains "$output" "aider"
 
     teardown_sandbox "$sandbox"
 }

@@ -112,7 +112,7 @@ gitcrew init --no-hooks   # Skip git hooks
 Starts an agent loop. The agent reads the task board, claims a task, works on it, and loops.
 
 ```bash
-gitcrew spawn Agent-A feature              # Claude Code (default)
+gitcrew spawn Agent-A feature              # Cursor (default; or last --cli used)
 gitcrew spawn Agent-B bugfix --cli cursor  # Use Cursor Agent
 gitcrew spawn Agent-C quality --cli aider  # Use Aider
 gitcrew spawn Agent-D docs --cli codex     # Use Codex CLI
@@ -121,7 +121,11 @@ gitcrew spawn Agent-A feature --dry-run    # Preview without executing
 gitcrew spawn Agent-A feature --docker     # Run in Docker container
 ```
 
+Your last `--cli` choice is saved in `.agent/agent.env` so the next spawn uses it if you omit `--cli`.
+
 **Supported CLI tools:** `claude` (Claude Code), `cursor` (Cursor Agent), `aider`, `codex`
+
+**Docker and push:** With `--docker`, the agent runs in a container and pushes to a shared *bare repo* (a volume), not to GitHub. The agent has full push/pull to that repo. To get changes to GitHub, pull from the bare repo on the host and push to your remote (see `.agent/PROMPT.md` for the agent-facing note).
 
 ### `gitcrew task`
 

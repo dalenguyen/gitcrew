@@ -12,7 +12,7 @@ set -euo pipefail
 
 AGENT_NAME=${1:?"Usage: spawn-docker.sh <agent-name> [role] [--cli tool] [--model m] [--once]"}
 ROLE=${2:-feature}
-AGENT_CLI="claude"
+AGENT_CLI="cursor"
 AGENT_MODEL=""
 AGENT_ONCE="false"
 
@@ -63,7 +63,7 @@ docker run -d \
         git config user.email "${AGENT_NAME}@gitcrew.local"
         git remote set-url origin /upstream
 
-        RUN_ARGS="--cli ${AGENT_CLI:-claude}"
+        RUN_ARGS="--cli ${AGENT_CLI:-cursor}"
         [ -n "${AGENT_MODEL:-}" ] && RUN_ARGS="$RUN_ARGS --model $AGENT_MODEL"
         [ "$AGENT_ONCE" = "true" ] && RUN_ARGS="$RUN_ARGS --once"
 

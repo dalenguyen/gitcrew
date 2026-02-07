@@ -17,7 +17,7 @@ set -euo pipefail
 
 AGENT_NAME=${1:?"Usage: ./run-loop.sh <agent-name> [role-prompt-file] [--cli tool] [--model model] [--once]"}
 ROLE_FILE=${2:-""}
-CLI_TOOL="claude"
+CLI_TOOL="cursor"
 MODEL="claude-opus-4-6-20250219"
 RUN_ONCE=false
 

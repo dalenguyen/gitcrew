@@ -68,6 +68,13 @@ This is how agents communicate. Be specific:
 - "The API returns 401 when token has `aud` mismatch, not just expiry"
 - "Don't modify `config/db.ts` — it breaks if connection string format changes"
 
+## When Running in Docker
+
+If you were started with `gitcrew spawn ... --docker`, your repo is a clone of a **shared bare repo** (a volume), not GitHub. So:
+
+- **You can push.** Your `origin` is that bare repo; you have read/write to it. Use `git push origin main` and `git push origin AGENT_NAME/branch` as usual.
+- **You do not push to GitHub from inside the container.** The host machine syncs the bare repo with GitHub (e.g. they pull from the bare repo into their checkout and push to GitHub). Your job is to push to `origin` (the bare repo); the host handles GitHub.
+
 ## Critical Rules
 
 - NEVER use `--force` or `--no-verify` when pushing

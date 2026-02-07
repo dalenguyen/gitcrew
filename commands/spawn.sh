@@ -17,7 +17,7 @@ print_spawn_usage() {
     echo "                    Options: feature, bugfix, quality, docs, integration"
     echo ""
     echo -e "${GITCREW_BOLD}OPTIONS${GITCREW_NC}"
-    echo "    --cli <tool>    Agent CLI to use: claude, cursor, aider, codex (default: claude)"
+    echo "    --cli <tool>    Agent CLI to use: claude, cursor, aider, codex (default: cursor, or last used)"
     echo "    --model <m>     Model to use (passed to claude/aider if supported)"
     echo "    --docker        Run agent in a Docker container"
     echo "    --dry-run       Show what would run without executing"
@@ -36,7 +36,8 @@ print_spawn_usage() {
 # Defaults
 AGENT_NAME=""
 ROLE="feature"
-CLI_TOOL="claude"
+CLI_TOOL="cursor"
+CLI_EXPLICIT=false
 MODEL="claude-opus-4-6-20250219"
 USE_DOCKER=false
 DRY_RUN=false
@@ -45,7 +46,7 @@ RUN_ONCE=false
 # Parse args
 while [ $# -gt 0 ]; do
     case "$1" in
-        --cli)      CLI_TOOL="$2"; shift ;;
+        --cli)      CLI_TOOL="$2"; CLI_EXPLICIT=true; shift ;;
         --model)    MODEL="$2"; shift ;;
         --docker)   USE_DOCKER=true ;;
         --dry-run)  DRY_RUN=true ;;
@@ -80,6 +81,20 @@ if [ ! -d "$AGENT_DIR" ]; then
     echo -e "${GITCREW_RED}Error: .agent/ directory not found.${GITCREW_NC}"
     echo "Run 'gitcrew init' first."
     exit 1
+fi
+
+# Use last-used CLI if no --cli was passed
+if [ "$CLI_EXPLICIT" = false ] && [ -f "${AGENT_DIR}/agent.env" ]; then
+    # shellcheck source=/dev/null
+    source "${AGENT_DIR}/agent.env" 2>/dev/null || true
+    case "${AGENT_CLI:-}" in
+        claude|cursor|aider|codex) CLI_TOOL="$AGENT_CLI" ;;
+    esac
+fi
+
+# Remember CLI for next time (when user passed --cli)
+if [ "$CLI_EXPLICIT" = true ]; then
+    echo "AGENT_CLI=${CLI_TOOL}" > "${AGENT_DIR}/agent.env"
 fi
 
 ROLE_FILE="${AGENT_DIR}/roles/${ROLE}.md"

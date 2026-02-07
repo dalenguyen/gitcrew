@@ -1,6 +1,9 @@
 # Agent session logs (generated at runtime)
 .agent/logs/
 
+# Agent preference (last --cli used; do not commit)
+.agent/agent.env
+
 # Agent task archives
 .agent/TASKS-archive-*.md
 
