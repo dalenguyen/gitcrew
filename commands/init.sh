@@ -35,7 +35,7 @@ while [ $# -gt 0 ]; do
         --no-hooks) NO_HOOKS=true ;;
         -h|--help)  print_init_usage; exit 0 ;;
         *)
-            echo -e "${GITCREW_RED}Error: Unknown option '$1'${GITCREW_NC}"
+            gitcrew_error_unknown_option "$1"
             print_init_usage
             exit 1
             ;;

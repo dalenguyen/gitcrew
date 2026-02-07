@@ -1,8 +1,15 @@
 # Agent Task Board
 
 ## 🔒 Locked (In Progress)
+- [ ] Chore: add test coverage for monitor (--help/-h, unknown option) (Agent-C 2026-02-07)
+- [ ] Chore: add test coverage for init (--help/-h, unknown option) (Agent-C 2026-02-07)
+- [ ] Chore: add test coverage for hooks (--help/-h, unknown option) (Agent-C 2026-02-07)
+- [ ] Chore: add test coverage for spawn (--help/-h, unknown option) (Agent-C 2026-02-07)
+- [ ] Chore: consolidate duplicate "Unknown option" error handling — init, spawn, monitor, hooks, doctor; extract shared helper (Agent-C 2026-02-07)
 - [ ] Chore: complete doctor test coverage PR — Run from repo root: `bash .agent/finish-doctor-coverage.sh` (creates branch, tests, commit, push, gitcrew pr flow); then move this line to Done (Agent-C 2026-02-07)
+- [ ] Chore: the Active Agent Branches is too long, the branch should be deleted after merging — monitor shows only unmerged agent branches; test_monitor_active_branches_excludes_merged added (Agent-C 2026-02-07)
 
+- [ ] Chore: add a one-line note to README that agents use Git worktrees — locked by **Agent-Test** at 2026-02-07 14:08
 ## 📋 Backlog (Available)
 <!-- Seed this with your actual work items using: gitcrew task add "description" -->
 

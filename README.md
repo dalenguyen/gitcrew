@@ -111,6 +111,8 @@ gitcrew init --no-hooks   # Skip git hooks
 
 Starts an agent loop. **By default, spawn assigns the first backlog task to this agent** so it shows in progress immediately and the agent starts working on it. Use `--no-lock-next` if you want the agent to pick a task from the board when it runs.
 
+**Isolation:** Each agent runs in its own **Git worktree** (`.agent/workspaces/<agent-name>/`). One repo, shared history; each worktree has its own branch so the main folder and main branch stay untouched. Multiple agents can run at the same time without affecting each other or main.
+
 ```bash
 gitcrew spawn Agent-A feature              # Cursor (default; or last --cli used)
 gitcrew spawn Agent-B bugfix              # Assigns first task to Agent-B, then starts
@@ -211,6 +213,15 @@ The review agent uses `.agent/roles/review.md` (correctness, security, design, t
 
 **Review isolation:** The review step runs in a temporary directory **outside the repo**, is **cleaned up** when done, and is **parallel-safe**—multiple agents (or `pr review` / `pr flow` invocations) can run at once without conflicting.
 
+### `gitcrew worktree`
+
+List or remove agent worktrees (e.g. after a PR is merged so the main repo stays clean).
+
+```bash
+gitcrew worktree list     # Show worktrees under .agent/workspaces/
+gitcrew worktree cleanup  # Remove all agent worktrees (run from main repo)
+```
+
 ### `gitcrew docker`
 
 Build and run agents or tests in Docker.
@@ -238,7 +249,7 @@ There is **no orchestrator agent**. Agents coordinate through:
 
 ### Agent Lifecycle
 
-Everything is automatic from planning through merged PR:
+The agent runs the full path itself—no human steps. From planning through merged PR, the agent executes git, tests, and `gitcrew pr flow` in the terminal. **For full automation, the agent must be allowed to run terminal commands** (e.g. in Cursor: enable command execution for the agent).
 
 ```
 1. git pull origin main — refetch; re-read .agent/PROMPT.md and README for latest workflow
@@ -252,7 +263,7 @@ Everything is automatic from planning through merged PR:
 9. Mark task done in TASKS.md, log in LOG.md; go to step 1
 ```
 
-**`gitcrew pr flow`** creates the issue (if needed), opens the PR, runs the code review in an isolated directory (parallel-safe), and merges if there are no "Must fix" items. Use `gitcrew pr flow --skip-review` to merge without running the review agent.
+**`gitcrew pr flow`** creates the issue (if needed), opens the PR, runs the code review in an isolated directory (parallel-safe), and merges if there are no "Must fix" items. **After merge**, it updates the main branch in your worktree and in the primary repo. Agent worktrees are **cleaned up** automatically: run **`gitcrew worktree cleanup`** from the main repo to remove merged agent worktrees now, or the next **`gitcrew spawn`** for that agent will remove and recreate a fresh worktree. Use `gitcrew pr flow --skip-review` to merge without running the review agent.
 
 ### Three Deployment Approaches
 

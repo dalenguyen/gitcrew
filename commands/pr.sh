@@ -285,6 +285,27 @@ review_has_blocking_issues() {
     return 0
 }
 
+# After a PR is merged: update current worktree to main, and the main worktree if different (so main branch is current everywhere).
+update_main_after_merge() {
+    git fetch origin 2>/dev/null || true
+    local top
+    top=$(git rev-parse --show-toplevel 2>/dev/null) || return 0
+    # Current worktree: switch to main and pull (so agent can continue on latest main in same worktree)
+    (cd "$top" && git checkout main 2>/dev/null || git checkout master 2>/dev/null) || true
+    (cd "$top" && git pull origin main 2>/dev/null || git pull origin master 2>/dev/null) || true
+    # If we're in a linked worktree, also update the primary worktree that has main checked out
+    local main_wt
+    main_wt=$(git worktree list 2>/dev/null | awk '/\[main\]$/{print $1; exit}')
+    if [ -n "$main_wt" ] && [ -d "$main_wt" ] && [ "$(cd "$main_wt" && git rev-parse --show-toplevel 2>/dev/null)" != "$top" ]; then
+        (git -C "$main_wt" fetch origin 2>/dev/null; git -C "$main_wt" checkout main 2>/dev/null; git -C "$main_wt" merge origin/main 2>/dev/null || git -C "$main_wt" pull origin main 2>/dev/null) || true
+        echo -e "${GITCREW_GREEN}Main branch updated in primary worktree.${GITCREW_NC}"
+    fi
+    # This worktree is now on main. It will be removed and recreated on next spawn, or run 'gitcrew worktree cleanup' from main repo to remove it now.
+    case "$top" in
+        */.agent/workspaces/*) echo -e "${GITCREW_DIM}Run 'gitcrew worktree cleanup' from the main repo to remove this agent worktree, or it will be replaced on next spawn.${GITCREW_NC}" ;;
+    esac
+}
+
 # --- pr merge ---
 cmd_merge() {
     local arg
@@ -315,6 +336,7 @@ cmd_merge() {
         exit 1
     }
     echo -e "${GITCREW_GREEN}PR merged.${GITCREW_NC}"
+    update_main_after_merge
 }
 
 # --- pr flow: create (if needed) → review → merge if no Must fix ---
@@ -355,6 +377,7 @@ cmd_flow() {
             exit 1
         }
         echo -e "${GITCREW_GREEN}PR merged.${GITCREW_NC}"
+        update_main_after_merge
         return 0
     fi
 
@@ -372,6 +395,7 @@ cmd_flow() {
     if [ -z "$diff" ]; then
         echo -e "${GITCREW_YELLOW}No diff in PR. Merging.${GITCREW_NC}"
         gh pr merge "$branch" --squash --delete-branch 2>/dev/null && echo -e "${GITCREW_GREEN}PR merged.${GITCREW_NC}" || exit 1
+        update_main_after_merge
         return 0
     fi
 
@@ -409,6 +433,8 @@ cmd_flow() {
         exit 1
     }
     echo -e "${GITCREW_GREEN}PR merged.${GITCREW_NC}"
+    # 5. Update main in this worktree and in primary worktree so main branch is current; agent continues in same worktree on latest main
+    update_main_after_merge
 }
 
 # --- Main ---

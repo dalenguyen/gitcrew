@@ -1,6 +1,44 @@
 #!/usr/bin/env bash
 # Tests for gitcrew hooks
 
+# Help and unknown option coverage (match doctor/spawn pattern)
+test_hooks_help_shows_usage() {
+    local sandbox exit_code
+    sandbox=$(setup_sandbox)
+    cd "$sandbox"
+    "$GITCREW" init --no-hooks >/dev/null 2>&1
+
+    local output
+    output=$("$GITCREW" hooks --help 2>&1)
+    assert_contains "$output" "USAGE"
+    assert_contains "$output" "OPTIONS"
+    assert_contains "$output" "--help"
+    assert_contains "$output" "--remove"
+    exit_code=0; "$GITCREW" hooks --help >/dev/null 2>&1 || exit_code=$?
+    assert_eq "0" "$exit_code" "hooks --help should exit 0"
+    exit_code=0; "$GITCREW" hooks -h >/dev/null 2>&1 || exit_code=$?
+    assert_eq "0" "$exit_code" "hooks -h should exit 0"
+
+    teardown_sandbox "$sandbox"
+}
+
+test_hooks_unknown_option_fails() {
+    local sandbox
+    sandbox=$(setup_sandbox)
+    cd "$sandbox"
+    "$GITCREW" init --no-hooks >/dev/null 2>&1
+
+    local output
+    output=$("$GITCREW" hooks --unknown 2>&1)
+    assert_contains "$output" "Unknown option"
+    assert_contains "$output" "unknown"
+    local exit_code=0
+    "$GITCREW" hooks --unknown >/dev/null 2>&1 || exit_code=$?
+    assert_eq "1" "$exit_code" "hooks --unknown should exit 1"
+
+    teardown_sandbox "$sandbox"
+}
+
 test_hooks_installs_pre_push() {
     local sandbox
     sandbox=$(setup_sandbox)

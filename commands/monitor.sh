@@ -29,7 +29,7 @@ while [ $# -gt 0 ]; do
         --once)     ONCE=true ;;
         -h|--help)  print_monitor_usage; exit 0 ;;
         *)
-            echo -e "${GITCREW_RED}Error: Unknown option '$1'${GITCREW_NC}"
+            gitcrew_error_unknown_option "$1"
             print_monitor_usage
             exit 1
             ;;
@@ -76,10 +76,29 @@ render_dashboard() {
     echo "  In Progress: ${LOCKED}  |  Backlog: ${BACKLOG}  |  Done: ${DONE}"
     echo ""
 
-    # Active branches (newest first)
+    # Active branches (newest first) — only show branches not merged into main so list stays short
     echo "--- Active Agent Branches ---"
-    local agent_branches
-    agent_branches=$(git for-each-ref --sort=-committerdate refs/heads refs/remotes/origin --format='%(refname:short)' 2>/dev/null | grep -i "agent" || true)
+    local merge_base=main
+    if ! git rev-parse -q refs/heads/main >/dev/null 2>&1; then
+        merge_base=origin/main
+    fi
+    if ! git rev-parse -q "$merge_base" >/dev/null 2>&1; then
+        merge_base=""
+    fi
+    local agent_branches=""
+    if [ -n "$merge_base" ]; then
+        local merged
+        merged=$(git branch --merged "$merge_base" --format='%(refname:short)' 2>/dev/null
+            git branch -r --merged "$merge_base" --format='%(refname:short)' 2>/dev/null)
+        while IFS= read -r branch; do
+            if echo "$merged" | grep -qFx "$branch"; then
+                continue
+            fi
+            agent_branches="${agent_branches}${agent_branches:+$'\n'}${branch}"
+        done < <(git for-each-ref --sort=-committerdate refs/heads refs/remotes/origin --format='%(refname:short)' 2>/dev/null | grep -i "agent" || true)
+    else
+        agent_branches=$(git for-each-ref --sort=-committerdate refs/heads refs/remotes/origin --format='%(refname:short)' 2>/dev/null | grep -i "agent" || true)
+    fi
     if [ -n "$agent_branches" ]; then
         while IFS= read -r branch; do
             local LAST

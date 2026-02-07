@@ -24,7 +24,7 @@ while [ $# -gt 0 ]; do
         --fix)      AUTO_FIX=true ;;
         -h|--help)  print_doctor_usage; exit 0 ;;
         *)
-            echo -e "${GITCREW_RED}Error: Unknown option '$1'${GITCREW_NC}"
+            gitcrew_error_unknown_option "$1"
             print_doctor_usage
             exit 1
             ;;

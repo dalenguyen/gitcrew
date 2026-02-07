@@ -213,3 +213,37 @@ test_init_refuses_overwrite_when_agent_dir_is_gitcrew() {
 
     teardown_sandbox "$sandbox"
 }
+
+test_init_help_shows_usage() {
+    local sandbox exit_code
+    sandbox=$(setup_sandbox)
+    cd "$sandbox"
+
+    local output
+    output=$("$GITCREW" init --help 2>&1)
+    assert_contains "$output" "USAGE"
+    assert_contains "$output" "OPTIONS"
+    assert_contains "$output" "--help"
+    exit_code=0; "$GITCREW" init --help >/dev/null 2>&1 || exit_code=$?
+    assert_eq "0" "$exit_code" "init --help should exit 0"
+    exit_code=0; "$GITCREW" init -h >/dev/null 2>&1 || exit_code=$?
+    assert_eq "0" "$exit_code" "init -h should exit 0"
+
+    teardown_sandbox "$sandbox"
+}
+
+test_init_unknown_option_fails() {
+    local sandbox
+    sandbox=$(setup_sandbox)
+    cd "$sandbox"
+
+    local output
+    output=$("$GITCREW" init --unknown 2>&1)
+    assert_contains "$output" "Unknown option"
+    assert_contains "$output" "unknown"
+    local exit_code=0
+    "$GITCREW" init --unknown >/dev/null 2>&1 || exit_code=$?
+    assert_eq "1" "$exit_code" "init --unknown should exit 1"
+
+    teardown_sandbox "$sandbox"
+}
