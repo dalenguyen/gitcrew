@@ -47,10 +47,11 @@ test_hooks_remove() {
 }
 
 test_hooks_pre_push_blocks_stale_branch() {
-    # Setup: create a "remote" bare repo and a working clone
+    # Setup: create a "remote" bare repo with explicit 'main' default branch
     local remote
     remote=$(mktemp -d)
-    git init --bare --quiet "$remote"
+    git init --bare --quiet --initial-branch=main "$remote" 2>/dev/null \
+        || { git init --bare --quiet "$remote"; git -C "$remote" symbolic-ref HEAD refs/heads/main; }
 
     local working
     working=$(mktemp -d)
@@ -58,6 +59,9 @@ test_hooks_pre_push_blocks_stale_branch() {
     cd "$working"
     git config user.name "Test"
     git config user.email "test@gitcrew.local"
+
+    # Ensure we're on 'main' branch (handles older git that defaults to 'master')
+    git checkout -b main 2>/dev/null || true
 
     # Initialize gitcrew
     "$GITCREW" init --no-hooks 2>&1 >/dev/null
@@ -72,19 +76,19 @@ TESTSEOF
     # Initial commit and push to main
     git add -A
     git commit -m "init" --quiet
-    git push --quiet origin main 2>/dev/null
+    git push --quiet origin main 2>/dev/null || git push --quiet -u origin HEAD:main 2>/dev/null
 
     # Simulate another agent pushing a new commit to main
     local other
     other=$(mktemp -d)
-    git clone --quiet "$remote" "$other"
+    git clone --quiet -b main "$remote" "$other"
     cd "$other"
     git config user.name "OtherAgent"
     git config user.email "other@gitcrew.local"
     echo "new work" > newfile.txt
     git add newfile.txt
     git commit -m "other agent work" --quiet
-    git push --quiet origin main 2>/dev/null
+    git push --quiet origin main
 
     # Back to our working dir: create feature branch WITHOUT pulling latest main
     cd "$working"
@@ -114,10 +118,11 @@ TESTSEOF
 }
 
 test_hooks_pre_push_allows_rebased_branch() {
-    # Setup: create a "remote" bare repo and a working clone
+    # Setup: create a "remote" bare repo with explicit 'main' default branch
     local remote
     remote=$(mktemp -d)
-    git init --bare --quiet "$remote"
+    git init --bare --quiet --initial-branch=main "$remote" 2>/dev/null \
+        || { git init --bare --quiet "$remote"; git -C "$remote" symbolic-ref HEAD refs/heads/main; }
 
     local working
     working=$(mktemp -d)
@@ -125,6 +130,9 @@ test_hooks_pre_push_allows_rebased_branch() {
     cd "$working"
     git config user.name "Test"
     git config user.email "test@gitcrew.local"
+
+    # Ensure we're on 'main' branch
+    git checkout -b main 2>/dev/null || true
 
     # Initialize gitcrew
     "$GITCREW" init --no-hooks 2>&1 >/dev/null
@@ -139,7 +147,7 @@ TESTSEOF
     # Initial commit and push to main
     git add -A
     git commit -m "init" --quiet
-    git push --quiet origin main 2>/dev/null
+    git push --quiet origin main 2>/dev/null || git push --quiet -u origin HEAD:main 2>/dev/null
 
     # Create feature branch (from up-to-date main — no divergence)
     git checkout -b Agent-Test/my-feature --quiet
