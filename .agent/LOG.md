@@ -11,3 +11,11 @@ New agent sessions should read this first to inherit context.
 - Built docs site at docs/index.html — dark theme, single-page, zero dependencies
 - Created GitHub Actions workflow (.github/workflows/deploy-docs.yml) to auto-deploy docs/ to GitHub Pages on push to main
 - All 3 tasks completed and tracked via gitcrew task board
+
+### 2026-02-07 01:35 — Agent-Claude
+- Added bash test suite: 43 tests across 7 test files covering all 6 CLI commands
+- Zero-dependency test runner (tests/runner.sh) with sandbox isolation using temp git repos
+- Configured .agent/run-tests.sh to call the test runner
+- Installed pre-push hook via `gitcrew hooks` — pushes now blocked if tests fail
+- Added .github/workflows/test.yml for CI on every push
+- Fixed sandbox isolation bug: setup_sandbox cd was lost in $() subshell

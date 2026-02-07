@@ -1,0 +1,28 @@
+#!/bin/bash
+# Pre-push hook — blocks pushes if tests fail
+# Installed by gitcrew
+#
+# This prevents agents (and humans) from pushing broken code
+# to the shared repository.
+
+echo "[gitcrew] Running pre-push validation..."
+
+if [ -f ".agent/run-tests.sh" ]; then
+    bash .agent/run-tests.sh fast
+    EXIT_CODE=$?
+else
+    echo "[gitcrew] Warning: .agent/run-tests.sh not found. Skipping test validation."
+    exit 0
+fi
+
+if [ $EXIT_CODE -ne 0 ]; then
+    echo ""
+    echo "=========================================="
+    echo "  PUSH BLOCKED — Tests are failing."
+    echo "  Fix the failures and try again."
+    echo "=========================================="
+    echo ""
+    exit 1
+fi
+
+echo "[gitcrew] All tests passed. Pushing..."
