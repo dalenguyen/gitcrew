@@ -28,7 +28,7 @@ while [ $# -gt 0 ]; do
         --remove)   REMOVE=true ;;
         -h|--help)  print_hooks_usage; exit 0 ;;
         *)
-            echo -e "${GITCREW_RED}Error: Unknown option '$1'${GITCREW_NC}"
+            gitcrew_error_unknown_option "$1"
             print_hooks_usage
             exit 1
             ;;

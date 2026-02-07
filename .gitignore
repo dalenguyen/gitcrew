@@ -1,6 +1,9 @@
 # Agent session logs (generated at runtime)
 .agent/logs/
 
+# Per-agent workspace clones (isolated; do not commit)
+.agent/workspaces/
+
 # Agent preference (last --cli used; do not commit)
 .agent/agent.env
 

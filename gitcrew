@@ -36,6 +36,11 @@ BOLD='\033[1m'
 DIM='\033[2m'
 NC='\033[0m' # No Color
 
+# Shared error helper for subcommands (message must match when options are unknown)
+gitcrew_error_unknown_option() {
+    echo -e "${GITCREW_RED}Error: Unknown option '$1'${GITCREW_NC}"
+}
+
 print_logo() {
     echo -e "${CYAN}"
     cat << 'EOF'
@@ -68,6 +73,7 @@ print_usage() {
     echo -e "    ${GREEN}status${NC}      Quick summary of agent team state"
     echo -e "    ${GREEN}docker${NC}      Manage Docker-based agent containers"
     echo -e "    ${GREEN}pr${NC}          Create issue + PR and run code review before merge"
+    echo -e "    ${GREEN}worktree${NC}    List or clean up agent worktrees"
     echo ""
     echo -e "${BOLD}OPTIONS${NC}"
     echo "    -h, --help       Show this help message"
@@ -111,6 +117,7 @@ run_command() {
     export GITCREW_BOLD="$BOLD"
     export GITCREW_DIM="$DIM"
     export GITCREW_NC="$NC"
+    export -f gitcrew_error_unknown_option
 
     source "$cmd_file" "$@"
 }
@@ -142,7 +149,7 @@ case "$1" in
         fi
         exit 0
         ;;
-    init|spawn|monitor|task|doctor|hooks|log|status|docker|pr)
+    init|spawn|monitor|task|doctor|hooks|log|status|docker|pr|worktree)
         run_command "$@"
         ;;
     *)
