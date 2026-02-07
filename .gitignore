@@ -1,0 +1,16 @@
+# Agent session logs (generated at runtime)
+.agent/logs/
+
+# Agent task archives
+.agent/TASKS-archive-*.md
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
