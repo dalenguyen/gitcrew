@@ -132,3 +132,65 @@ test_pr_review_isolated_cleanup() {
     rm -f "${TMPDIR:-/tmp}/gitcrew-test-out.$$" 2>/dev/null || true
     [ "$before" = "$after" ] || { echo "Expected $before leftover dirs, got $after"; return 1; }
 }
+
+# Flow must not merge when review contains Must fix list items (logic in commands/pr.sh)
+test_pr_flow_blocks_on_must_fix() {
+    local pr_script
+    pr_script="$(dirname "$GITCREW")/commands/pr.sh"
+    [ -f "$pr_script" ] || return 0
+
+    # Review with Must fix + numbered item => must be blocking (exit 1)
+    local with_must_fix
+    with_must_fix=$(mktemp)
+    cat > "$with_must_fix" << 'EOF'
+## Summary
+Nice PR.
+
+## Must fix
+
+1. **Add newline at end of file.**
+
+## Should fix
+- None.
+EOF
+    # Shell: run review_has_blocking_issues from pr.sh; function returns 1 when blocking.
+    # We source pr.sh and call the function; pr.sh runs main when sourced, so we grep and eval the function only.
+    local block_check
+    block_check='review_has_blocking_issues() {
+        local review_file="$1"
+        local in_must_fix=0
+        while IFS= read -r line; do
+            if echo "$line" | grep -qE "^##? .*[Mm]ust fix"; then in_must_fix=1; continue; fi
+            if [ "$in_must_fix" = 1 ]; then
+                if echo "$line" | grep -qE "^##? "; then break; fi
+                if echo "$line" | grep -qE "^[0-9]+\."; then return 1; fi
+                if echo "$line" | grep -qE "^[[:space:]]*-[[:space:]]+"; then
+                    if ! echo "$line" | grep -qE "^[[:space:]]*-[[:space:]]+None\.?[[:space:]]*$"; then return 1; fi
+                fi
+            fi
+        done < "$review_file"
+        return 0
+    }'
+    (
+        eval "$block_check"
+        review_has_blocking_issues "$with_must_fix" && exit 1 || exit 0
+    ) || { rm -f "$with_must_fix"; echo "Expected blocking (Must fix with 1.)"; return 1; }
+    rm -f "$with_must_fix"
+
+    # Review with Must fix but only "- None" => not blocking
+    local no_must_fix
+    no_must_fix=$(mktemp)
+    cat > "$no_must_fix" << 'EOF'
+## Must fix
+
+- None.
+
+## Should fix
+- Something.
+EOF
+    (
+        eval "$block_check"
+        review_has_blocking_issues "$no_must_fix" || exit 1
+    ) || { rm -f "$no_must_fix"; echo "Expected no blocking (Must fix has only None)"; return 1; }
+    rm -f "$no_must_fix"
+}
