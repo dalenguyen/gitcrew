@@ -256,21 +256,29 @@ EOF
     fi
 }
 
-# Returns 0 if review has no blocking "Must fix" items, 1 if it has unchecked Must fix items.
+# Returns 0 if review has no blocking "Must fix" items, 1 if it has any Must fix items.
+# Blocks on any list item in the Must fix section (numbered "1." or "- ..." or "- [ ]").
 review_has_blocking_issues() {
     local review_file="$1"
     local in_must_fix=0
     while IFS= read -r line; do
-        if echo "$line" | grep -qE '^## .*[Mm]ust fix'; then
+        if echo "$line" | grep -qE '^##? .*[Mm]ust fix'; then
             in_must_fix=1
             continue
         fi
         if [ "$in_must_fix" = 1 ]; then
-            if echo "$line" | grep -qE '^## '; then
+            if echo "$line" | grep -qE '^##? '; then
                 break
             fi
-            if echo "$line" | grep -qE '^\s*-\s+\[\s\]'; then
+            # Numbered list item (1. 2. ...)
+            if echo "$line" | grep -qE '^[0-9]+\.'; then
                 return 1
+            fi
+            # Dash list item (- ... or - [ ]); allow "- None" / "- None." as non-blocking
+            if echo "$line" | grep -qE '^[[:space:]]*-[[:space:]]+'; then
+                if ! echo "$line" | grep -qE '^[[:space:]]*-[[:space:]]+None\.?[[:space:]]*$'; then
+                    return 1
+                fi
             fi
         fi
     done < "$review_file"
