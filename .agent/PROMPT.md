@@ -37,9 +37,11 @@ the task board.
 ## Finishing a Task
 
 1. Run `.agent/run-tests.sh full` — everything must pass
-2. Merge latest main: `git checkout main && git pull && git checkout - && git merge main`
+2. Rebase on latest main: `git pull --rebase origin main`
 3. Resolve any conflicts (see Merge Conflict Protocol below)
 4. Push your branch: `git push origin AGENT_NAME/<task-name>`
+   - The pre-push hook will verify your branch includes all of `origin/main`
+   - If it blocks, run `git pull --rebase origin main` and push again
 5. Merge to main (fast-forward or merge commit)
 6. Update `.agent/TASKS.md`: move task to Done with a one-line summary
 7. Log what you did in `.agent/LOG.md`

@@ -45,3 +45,125 @@ test_hooks_remove() {
 
     teardown_sandbox "$sandbox"
 }
+
+test_hooks_pre_push_blocks_stale_branch() {
+    # Setup: create a "remote" bare repo and a working clone
+    local remote
+    remote=$(mktemp -d)
+    git init --bare --quiet "$remote"
+
+    local working
+    working=$(mktemp -d)
+    git clone --quiet "$remote" "$working"
+    cd "$working"
+    git config user.name "Test"
+    git config user.email "test@gitcrew.local"
+
+    # Initialize gitcrew
+    "$GITCREW" init --no-hooks 2>&1 >/dev/null
+
+    # Create a simple run-tests.sh that always passes
+    cat > .agent/run-tests.sh << 'TESTSEOF'
+#!/bin/bash
+echo "tests pass"
+exit 0
+TESTSEOF
+
+    # Initial commit and push to main
+    git add -A
+    git commit -m "init" --quiet
+    git push --quiet origin main 2>/dev/null
+
+    # Simulate another agent pushing a new commit to main
+    local other
+    other=$(mktemp -d)
+    git clone --quiet "$remote" "$other"
+    cd "$other"
+    git config user.name "OtherAgent"
+    git config user.email "other@gitcrew.local"
+    echo "new work" > newfile.txt
+    git add newfile.txt
+    git commit -m "other agent work" --quiet
+    git push --quiet origin main 2>/dev/null
+
+    # Back to our working dir: create feature branch WITHOUT pulling latest main
+    cd "$working"
+    git checkout -b Agent-Test/my-feature --quiet
+    echo "my work" > myfile.txt
+    git add myfile.txt
+    git commit -m "my feature" --quiet
+
+    # Install the real pre-push hook from the repo
+    mkdir -p .githooks
+    cp "${REPO_ROOT}/.githooks/pre-push" .githooks/pre-push
+    chmod +x .githooks/pre-push
+    git config core.hooksPath .githooks
+
+    # Try to push — should be blocked because we're behind origin/main
+    local output
+    if output=$(git push origin Agent-Test/my-feature 2>&1); then
+        echo "Push should have been blocked but succeeded"
+        rm -rf "$remote" "$working" "$other"
+        return 1
+    fi
+    assert_contains "$output" "behind main" "should mention branch is behind main"
+
+    # Cleanup
+    cd "$REPO_ROOT"
+    rm -rf "$remote" "$working" "$other"
+}
+
+test_hooks_pre_push_allows_rebased_branch() {
+    # Setup: create a "remote" bare repo and a working clone
+    local remote
+    remote=$(mktemp -d)
+    git init --bare --quiet "$remote"
+
+    local working
+    working=$(mktemp -d)
+    git clone --quiet "$remote" "$working"
+    cd "$working"
+    git config user.name "Test"
+    git config user.email "test@gitcrew.local"
+
+    # Initialize gitcrew
+    "$GITCREW" init --no-hooks 2>&1 >/dev/null
+
+    # Create a simple run-tests.sh that always passes
+    cat > .agent/run-tests.sh << 'TESTSEOF'
+#!/bin/bash
+echo "tests pass"
+exit 0
+TESTSEOF
+
+    # Initial commit and push to main
+    git add -A
+    git commit -m "init" --quiet
+    git push --quiet origin main 2>/dev/null
+
+    # Create feature branch (from up-to-date main — no divergence)
+    git checkout -b Agent-Test/my-feature --quiet
+    echo "my work" > myfile.txt
+    git add myfile.txt
+    git commit -m "my feature" --quiet
+
+    # Install the real pre-push hook from the repo
+    mkdir -p .githooks
+    cp "${REPO_ROOT}/.githooks/pre-push" .githooks/pre-push
+    chmod +x .githooks/pre-push
+    git config core.hooksPath .githooks
+
+    # Push should succeed (branch includes all of origin/main)
+    local output
+    if ! output=$(git push origin Agent-Test/my-feature 2>&1); then
+        echo "Push should have succeeded but was blocked"
+        echo "$output"
+        rm -rf "$remote" "$working"
+        return 1
+    fi
+    assert_contains "$output" "up to date with main" "should confirm branch is current"
+
+    # Cleanup
+    cd "$REPO_ROOT"
+    rm -rf "$remote" "$working"
+}

@@ -64,27 +64,44 @@ else
     # Inline fallback
     cat > "${HOOKS_DIR}/pre-push" << 'HOOKEOF'
 #!/bin/bash
-# Pre-push hook — blocks pushes if tests fail
+# Pre-push hook — blocks pushes if tests fail or branch is behind main
 # Installed by gitcrew
 
-echo "Running pre-push validation..."
+CURRENT_BRANCH=$(git branch --show-current 2>/dev/null || echo "")
+
+if [ -n "$CURRENT_BRANCH" ] && [ "$CURRENT_BRANCH" != "main" ] && [ "$CURRENT_BRANCH" != "master" ]; then
+    echo "[gitcrew] Checking if branch is up to date with main..."
+    git fetch origin main --quiet 2>/dev/null || true
+    if git rev-parse --verify origin/main &>/dev/null; then
+        if ! git merge-base --is-ancestor origin/main HEAD; then
+            echo ""
+            echo "PUSH BLOCKED — Branch is behind main."
+            echo "Run: git pull --rebase origin main"
+            echo ""
+            exit 1
+        fi
+        echo "[gitcrew] Branch is up to date with main."
+    fi
+fi
+
+echo "[gitcrew] Running pre-push validation..."
 
 if [ -f ".agent/run-tests.sh" ]; then
     bash .agent/run-tests.sh fast
+    EXIT_CODE=$?
 else
-    echo "Warning: .agent/run-tests.sh not found. Skipping test validation."
+    echo "[gitcrew] Warning: .agent/run-tests.sh not found. Skipping test validation."
     exit 0
 fi
 
-EXIT_CODE=$?
 if [ $EXIT_CODE -ne 0 ]; then
     echo ""
-    echo "ERROR: Tests failing. Push blocked."
+    echo "PUSH BLOCKED — Tests are failing."
     echo "Fix the failing tests and try again."
     exit 1
 fi
 
-echo "All tests passed. Pushing..."
+echo "[gitcrew] All tests passed. Pushing..."
 HOOKEOF
 fi
 
