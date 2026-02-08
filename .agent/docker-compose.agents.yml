@@ -2,19 +2,19 @@
 #
 # Run a team of isolated agent containers.
 #
+# Prerequisites:
+#   gitcrew docker build                 # Build the agent image (once)
+#   git clone --bare . /tmp/gitcrew-upstream.git  # Create shared upstream
+#
 # Usage:
-#   # First, create a bare upstream repo:
-#   git clone --bare . /tmp/gitcrew-upstream.git
-#
-#   # Then start the agents:
 #   docker compose -f .agent/docker-compose.agents.yml up
-#
-#   # Scale specific agents:
 #   docker compose -f .agent/docker-compose.agents.yml up --scale agent-a=2
+#   docker compose -f .agent/docker-compose.agents.yml logs -f agent-a
 
 services:
   agent-a:
-    build: .
+    image: gitcrew-agent
+    container_name: gitcrew-Agent-A
     volumes:
       - /tmp/gitcrew-upstream.git:/upstream:rw
     environment:
@@ -32,7 +32,8 @@ services:
     restart: unless-stopped
 
   agent-b:
-    build: .
+    image: gitcrew-agent
+    container_name: gitcrew-Agent-B
     volumes:
       - /tmp/gitcrew-upstream.git:/upstream:rw
     environment:
@@ -50,7 +51,8 @@ services:
     restart: unless-stopped
 
   agent-c:
-    build: .
+    image: gitcrew-agent
+    container_name: gitcrew-Agent-C
     volumes:
       - /tmp/gitcrew-upstream.git:/upstream:rw
     environment:
