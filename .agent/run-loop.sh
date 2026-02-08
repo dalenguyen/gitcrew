@@ -18,7 +18,7 @@ set -euo pipefail
 AGENT_NAME=${1:?"Usage: ./run-loop.sh <agent-name> [role-prompt-file] [--cli tool] [--model model] [--once]"}
 ROLE_FILE=${2:-""}
 CLI_TOOL="cursor"
-MODEL="claude-opus-4-6-20250219"
+MODEL="claude-sonnet-4-5-20250929"
 RUN_ONCE=false
 
 # Parse optional flags
@@ -65,6 +65,7 @@ while true; do
     case "$CLI_TOOL" in
         claude)
             claude --dangerously-skip-permissions \
+                   --permission-mode bypassPermissions \
                    -p "$PROMPT" \
                    --model "$MODEL" \
                    2>&1 | tee "$LOGFILE"

@@ -148,7 +148,7 @@ run_review_isolated() {
 
         case "$cli" in
             claude)
-                (cd "$review_dir" && claude --dangerously-skip-permissions -p "$prompt_path" 2>/dev/null > "$out_path") || true
+                (cd "$review_dir" && claude --dangerously-skip-permissions --permission-mode bypassPermissions -p "$prompt_path" 2>/dev/null > "$out_path") || true
                 ;;
             cursor|agent)
                 (cd "$review_dir" && agent -p "$prompt_path" 2>/dev/null > "$out_path") || true

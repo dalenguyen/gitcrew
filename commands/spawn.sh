@@ -42,7 +42,7 @@ AGENT_NAME=""
 ROLE="feature"
 CLI_TOOL="cursor"
 CLI_EXPLICIT=false
-MODEL="claude-opus-4-6-20250219"
+MODEL="claude-sonnet-4-5-20250929"
 USE_DOCKER=false
 DRY_RUN=false
 RUN_ONCE=false
@@ -243,6 +243,7 @@ run_session() {
                 echo -e "${GITCREW_DIM}[dry-run] claude --dangerously-skip-permissions -p \"<prompt>\" --model ${MODEL}${GITCREW_NC}"
             else
                 claude --dangerously-skip-permissions \
+                       --permission-mode bypassPermissions \
                        -p "$PROMPT" \
                        --model "$MODEL" \
                        2>&1 | tee "$LOGFILE"
