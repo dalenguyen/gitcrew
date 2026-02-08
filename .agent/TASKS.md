@@ -2,6 +2,7 @@
 
 ## 🔒 Locked (In Progress)
 
+- [ ] Fix: FAIL test_worktree::test_worktree_cleanup_removes_agent_worktrees - precondition: worktree should exist — locked by **Agent-Test** at 2026-02-08 09:27
 ## 📋 Backlog (Available)
 
 <!-- Seed this with your actual work items using: gitcrew task add "description" -->
