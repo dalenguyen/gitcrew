@@ -88,8 +88,7 @@ render_dashboard() {
     local agent_branches=""
     if [ -n "$merge_base" ]; then
         local merged
-        merged=$(git branch --merged "$merge_base" --format='%(refname:short)' 2>/dev/null
-            git branch -r --merged "$merge_base" --format='%(refname:short)' 2>/dev/null)
+        merged=$(git branch --merged "$merge_base" --format='%(refname:short)' 2>/dev/null; git branch -r --merged "$merge_base" --format='%(refname:short)' 2>/dev/null)
         while IFS= read -r branch; do
             if echo "$merged" | grep -qFx "$branch"; then
                 continue
