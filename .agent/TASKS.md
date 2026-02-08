@@ -1,19 +1,15 @@
 # Agent Task Board
 
 ## 🔒 Locked (In Progress)
-- [ ] Chore: add test coverage for monitor (--help/-h, unknown option) (Agent-C 2026-02-07)
-- [ ] Chore: add test coverage for init (--help/-h, unknown option) (Agent-C 2026-02-07)
-- [ ] Chore: add test coverage for hooks (--help/-h, unknown option) (Agent-C 2026-02-07)
-- [ ] Chore: add test coverage for spawn (--help/-h, unknown option) (Agent-C 2026-02-07)
-- [ ] Chore: consolidate duplicate "Unknown option" error handling — init, spawn, monitor, hooks, doctor; extract shared helper (Agent-C 2026-02-07)
-- [ ] Chore: complete doctor test coverage PR — Run from repo root: `bash .agent/finish-doctor-coverage.sh` (creates branch, tests, commit, push, gitcrew pr flow); then move this line to Done (Agent-C 2026-02-07)
-- [ ] Chore: the Active Agent Branches is too long, the branch should be deleted after merging — monitor shows only unmerged agent branches; test_monitor_active_branches_excludes_merged added (Agent-C 2026-02-07)
 
-- [ ] Chore: add a one-line note to README that agents use Git worktrees — locked by **Agent-Test** at 2026-02-07 14:08
 ## 📋 Backlog (Available)
+
 <!-- Seed this with your actual work items using: gitcrew task add "description" -->
 
+
 ## ✅ Done
+
+- [x] Chore: the Active Agent Branches list is too long, it should be shorter or local branch should be delete after merging — Monitor now shows only unmerged agent branches using `git branch --merged` filtering; added test_monitor_active_branches_excludes_merged (Agent-C 2026-02-08)
 - [x] Chore: add missing test coverage for doctor (--help, unknown option, --fix) — Added test_doctor_help_shows_usage, test_doctor_unknown_option_fails, test_doctor_fix_makes_script_executable (Agent-C 2026-02-07)
 - [x] Fix: monitor --interval N leaves N as next argv — `--interval` now uses `shift 2; continue` so the numeric value is consumed; added test_monitor_interval_consumes_argument (Agent-C 2026-02-07)
 - [x] Chore: consolidate duplicate dashboard logic in monitor.sh — watch now runs `gitcrew monitor --once` so single code path (render_dashboard), removed ~50-line heredoc (Agent-C 2026-02-07)
